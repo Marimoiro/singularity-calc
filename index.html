@@ -251,6 +251,7 @@
     <h2><span class="n">i</span><span data-i18n="ci">計算モデルと前提</span></h2>
     <p class="foot" style="line-height:1.75" data-i18n-html="modelP"></p>
     <p class="foot" data-i18n-html="srcP"></p>
+    <p class="foot" style="margin-top:12px;border-top:1px solid var(--line);padding-top:12px" data-i18n="disclaimer"></p>
   </div>
 </div>
 
@@ -303,8 +304,9 @@
       segFoot:"アトム量が閾値を超えるたびに「原子獲得量」が累乗され、実効レートが下がります。軽減設定を有効にすると該当区間のペナルティが緩みます。",
       copyBtn:"設定と結果をコピー", copied:"コピーしました ✓",
       ci:"計算モデルと前提",
-      modelP:'アトムは毎秒 ×a になるので、<b>1秒で log₁₀(a) 桁</b>増えます。到達時間 ≈ <b>伸ばす桁数 ÷ (増える桁/秒)</b>。<br>ざっくり見積もり: 倍率を <b>10倍</b>にすると増える桁/秒が <b>+1</b>（例 3→4桁/秒）。「1桁/秒 増やすには倍率×10」という感覚です。<br>ペナルティもバフも全部 <b>掛け算</b>で指数にかかります: 増える桁/秒 = log₁₀(特異点倍率) × E（E＝その地点で有効な全指数の積）。閾値を超えて E が小さくなるほど遅くなります。<br><span class="pill">前提</span> ベース獲得量は周回中一定。サクリファイスダスト・拡散力系は未反映。必要アトム量は wiki の区間式に基づく近似値。',
+      modelP:'アトムは毎秒 ×a になるので、<b>1秒で log₁₀(a) 桁</b>増えます。到達時間 ≈ <b>伸ばす桁数 ÷ (増える桁/秒)</b>。<br>ざっくり見積もり: 倍率を <b>10倍</b>にすると増える桁/秒が <b>+1</b>（例 3→4桁/秒）。「1桁/秒 増やすには倍率×10」という感覚です。<br>ペナルティもバフも全部 <b>掛け算</b>で指数にかかります（増える桁/秒 = log₁₀(特異点倍率) × E）。閾値を超えて E が小さくなるほど遅くなります。<br>式で書くと: <code style="all:unset;color:var(--acc2)">t = log₁₀(目標/現在) ÷ log₁₀(a)</code>、実効レート <code style="all:unset;color:var(--acc2)">a = B^E</code>（B＝特異点倍率、E＝その地点で有効な全指数の積）。<br><span class="pill">前提</span> ベース獲得量は周回中一定。サクリファイスダスト・拡散力系は未反映。必要アトム量は wiki の区間式に基づく近似値。',
       srcP:'出典: <a href="https://wikiwiki.jp/revoidle/Singularity" target="_blank" rel="noopener">特異点</a> / <a href="https://wikiwiki.jp/revoidle/Minerals/%E4%B8%80%E8%A6%A7" target="_blank" rel="noopener">精錬ノード一覧</a>',
+      disclaimer:"免責事項: 本ツールはあくまでシミュレーターです。ゲーム内の数値の丸め・仕様変更・入力値の誤差などにより、実際とは値が異なる場合があります。本ツールの利用によって生じたいかなる不利益・損害についても、作者は一切の責任を負いません。",
       reqAtoms:"必要アトム量 ≈ ",
       errCur:"現在のアトム量の形式が不正です（例: 1 または 1.8e308）",
       errTgt:"目標アトム量の形式が不正です（例: 1e696）",
@@ -356,8 +358,9 @@
       segFoot:"Each time atoms cross a threshold, atom gain is raised to a power and the effective rate drops. Enabling a mitigation eases that segment's penalty.",
       copyBtn:"Copy settings & result", copied:"Copied ✓",
       ci:"Model & assumptions",
-      modelP:'Atoms become ×a per second, so you gain <b>log₁₀(a) digits per second</b>. Time ≈ <b>digits to grow ÷ digits-per-sec</b>.<br>Rough rule: ×<b>10</b> on the multiplier adds <b>+1</b> digit/sec (e.g. 3→4/sec) — one more digit/sec costs a 10× multiplier.<br>Penalties and buffs are all <b>multiplication</b> on the exponent: digits/sec = log₁₀(sing. mult) × E (E = product of active exponents). The smaller E gets past each threshold, the slower it goes.<br><span class="pill">Assumes</span> base gain constant per run; sacrifice-dust / spread buffs not modeled; required atoms approximated from wiki formulas.',
+      modelP:'Atoms become ×a per second, so you gain <b>log₁₀(a) digits per second</b>. Time ≈ <b>digits to grow ÷ digits-per-sec</b>.<br>Rough rule: ×<b>10</b> on the multiplier adds <b>+1</b> digit/sec (e.g. 3→4/sec) — one more digit/sec costs a 10× multiplier.<br>Penalties and buffs are all <b>multiplication</b> on the exponent (digits/sec = log₁₀(sing. mult) × E). The smaller E gets past each threshold, the slower it goes.<br>As a formula: <code style="all:unset;color:var(--acc2)">t = log₁₀(target/current) ÷ log₁₀(a)</code>, effective rate <code style="all:unset;color:var(--acc2)">a = B^E</code> (B = sing. multiplier, E = product of active exponents).<br><span class="pill">Assumes</span> base gain constant per run; sacrifice-dust / spread buffs not modeled; required atoms approximated from wiki formulas.',
       srcP:'Source: <a href="https://wikiwiki.jp/revoidle/Singularity" target="_blank" rel="noopener">Singularity</a> / <a href="https://wikiwiki.jp/revoidle/Minerals/%E4%B8%80%E8%A6%A7" target="_blank" rel="noopener">Refine nodes</a>',
+      disclaimer:"Disclaimer: This is only a simulator. Actual values may differ due to in-game rounding, spec changes, or input errors. The author accepts no liability whatsoever for any loss or disadvantage arising from use of this tool.",
       reqAtoms:"Required atoms ≈ ",
       errCur:"Invalid current-atoms format (e.g. 1 or 1.8e308)",
       errTgt:"Invalid target-atoms format (e.g. 1e696)",
