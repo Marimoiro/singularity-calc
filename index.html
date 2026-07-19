@@ -72,6 +72,7 @@
   .msg{border-radius:10px;padding:11px 13px;font-size:.86rem;margin-top:4px}
   .msg.bad{background:#ff6b8118;border:1px solid #ff6b8155;color:#ffb3bf}
   .msg.ok{background:#57e0c815;border:1px solid #57e0c844;color:#a9f2e4}
+  .msg.info{background:#2a2f5733;border:1px solid var(--line);color:var(--sub)}
 
   table{width:100%;border-collapse:collapse;font-size:.8rem;margin-top:6px}
   .scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
@@ -99,7 +100,7 @@
     <div class="row">
       <div class="field">
         <label>特異点倍率</label>
-        <input id="singMult" type="text" value="100" inputmode="text" />
+        <input id="singMult" type="text" value="1" inputmode="text" />
         <p class="hint">特異点タブの倍率。例: <code style="all:unset">100</code> / <code style="all:unset">1e4</code></p>
       </div>
       <div class="field">
@@ -123,8 +124,8 @@
     </div>
     <div id="atomBox" class="field" style="display:none">
       <label>目標アトム量</label>
-      <input id="tgtAtom" type="text" value="1e696" inputmode="text" />
-      <p class="hint">例: <code style="all:unset">1e696</code></p>
+      <input id="tgtAtom" type="text" value="1.80e308" inputmode="text" />
+      <p class="hint">「特異点の回数で指定」で選んだ値を引き継ぎます。自由入力も可（例 <code style="all:unset">1e696</code>）</p>
     </div>
   </div>
 
@@ -156,14 +157,20 @@
         <div class="ctl"><input type="number" id="tree62" value="0.033" min="0" max="1" step="0.001"><span class="u">^</span></div>
       </div>
     </div>
-    <details class="adv">
-      <summary>詳細設定</summary>
-      <div class="field" style="margin-top:12px">
-        <label>遺物69の値（1e6強化の指数, 1.0〜2.0程度）</label>
-        <input id="relic69" type="number" value="1.0" step="0.05" min="0" />
-        <p class="hint">現在アトムと目標が共に1e6超なら結果にほぼ影響しません。既定=1.0</p>
+  </div>
+
+  <div class="card">
+    <h2><span class="n">4</span>バフ（強化）</h2>
+    <div class="mit">
+      <div class="mrow">
+        <div class="t">特異点回数アトム倍率<small>アトム量1から常時 原子獲得量^この値（既定1＝効果なし）</small></div>
+        <div class="ctl"><input type="number" id="singCnt" value="1" min="0" step="0.01"><span class="u">^</span></div>
       </div>
-    </details>
+      <div class="mrow">
+        <div class="t">遺物69<small>1e6以上で 原子獲得量^この値（1〜2程度、既定1）</small></div>
+        <div class="ctl"><input type="number" id="relic69" value="1.0" min="0" step="0.05"><span class="u">^</span></div>
+      </div>
+    </div>
   </div>
 
   <div class="card">
@@ -182,7 +189,7 @@
   </div>
 
   <div class="card">
-    <h2><span class="n">4</span>ペナルティ区間ごとの内訳</h2>
+    <h2><span class="n">5</span>ペナルティ区間ごとの内訳</h2>
     <div class="scroll">
       <table id="segTable">
         <thead><tr><th>区間 (アトム)</th><th>累積指数 E</th><th>実効 ×/秒</th><th>桁数</th><th>所要時間</th></tr></thead>
@@ -211,6 +218,7 @@
   function thresholds(s){
     var rn128 = Math.min(1.0, 0.5 + 0.05*(s.rn128||0));   // 1e10: Lv10で1.0(無効)
     return [
+      {log:0,       e:s.singCnt, kind:"buf", base:"^特異点回数倍率"},   // アトム1から常時
       {log:6,       e:s.relic69, kind:"buf", base:"^遺物69"},          // 1e6 強化
       {log:10,      e:rn128,     kind:"pen", base:"^0.5",   mit:s.rn128>0},
       {log:50,      e:s.rn126?1:0.833, kind:"pen", base:"^0.833", mit:s.rn126},
@@ -273,7 +281,7 @@
   }
 
   var $=function(id){return document.getElementById(id);};
-  var singMult=$("singMult"), curAtom=$("curAtom"), relic69=$("relic69"),
+  var singMult=$("singMult"), curAtom=$("curAtom"), relic69=$("relic69"), singCnt=$("singCnt"),
       rn126=$("rn126"), rn127=$("rn127"), rn128=$("rn128"),
       tree31=$("tree31"), tree32=$("tree32"), tree62=$("tree62"),
       singSel=$("singSel"), singReq=$("singReq"), tgtAtom=$("tgtAtom"),
@@ -283,7 +291,7 @@
   (function(){
     var html="";
     for(var N=1;N<=100;N++){
-      html+='<option value="'+N+'"'+(N===32?' selected':'')+'>特異点 '+N+'　（'+fmtLog(reqLog10(N))+'）</option>';
+      html+='<option value="'+N+'"'+(N===1?' selected':'')+'>特異点 '+N+'　（'+fmtLog(reqLog10(N))+'）</option>';
     }
     singSel.innerHTML=html;
   })();
@@ -294,17 +302,20 @@
       b.classList.add("on"); mode=b.dataset.mode;
       singBox.style.display = mode==="sing"?"":"none";
       atomBox.style.display = mode==="atom"?"":"none";
+      // 「アトム量で指定」に切替時、ドロップダウンで選択中の必要アトム量を引き継ぐ
+      if(mode==="atom"){ tgtAtom.value = fmtLog(reqLog10(parseInt(singSel.value,10))); }
       calc();
     });
   });
 
   function settings(){
     var r69=parseFloat(relic69.value); if(!isFinite(r69)||r69<0) r69=1.0;
+    var sc=parseFloat(singCnt.value); if(!isFinite(sc)||sc<0) sc=1.0;
     var t31=parseFloat(tree31.value); if(!isFinite(t31)) t31=0.12;
     var t32=parseFloat(tree32.value); if(!isFinite(t32)) t32=0.05;
     var t62=parseFloat(tree62.value); if(!isFinite(t62)) t62=0.033;
     var l128=parseInt(rn128.value,10); if(!isFinite(l128)||l128<0) l128=0; if(l128>10) l128=10;
-    return {relic69:r69, rn126:rn126.checked, rn127:rn127.checked, rn128:l128,
+    return {relic69:r69, singCnt:sc, rn126:rn126.checked, rn127:rn127.checked, rn128:l128,
             tree31:t31, tree32:t32, tree62:t62};
   }
   function targetLog(){
@@ -333,7 +344,7 @@
 
     // ペナルティ未発動時の毎秒倍率 B = 特異点倍率
     var logB=logM;
-    if(logB<=0){ msg("bad","特異点倍率が ×1 以下ではアトムが増えません。"); clearOut(); return; }
+    if(logB<=0){ msg("info","特異点倍率を 1 より大きくすると計算されます。"); clearOut(); return; }
 
     $("stReq").textContent=fmtLog(x1);
     if(x1<=x0){ msg("ok","目標アトム量に既に到達しています（所要時間 0）。");
@@ -372,7 +383,7 @@
     $("segTable").querySelector("tbody").innerHTML=rows;
   }
 
-  [singMult,curAtom,relic69,rn126,rn127,rn128,tree31,tree32,tree62,singSel,tgtAtom].forEach(function(el){
+  [singMult,curAtom,relic69,singCnt,rn126,rn127,rn128,tree31,tree32,tree62,singSel,tgtAtom].forEach(function(el){
     el.addEventListener("input",calc); el.addEventListener("change",calc);
   });
   calc();
