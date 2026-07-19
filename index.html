@@ -52,6 +52,8 @@
   .mrow .ctl{display:flex;align-items:center;gap:8px;justify-self:end}
   .mrow .ctl input[type=number]{width:92px;padding:7px 9px;font-size:.9rem}
   .mrow .ctl .u{font-size:.72rem;color:var(--dim);font-family:var(--mono)}
+  .mrow .ctl .chk{display:flex;align-items:center;gap:4px;font-size:.72rem;color:var(--sub);cursor:pointer;white-space:nowrap}
+  .mrow .ctl .chk input{width:auto;margin:0;accent-color:var(--acc2)}
   /* toggle */
   .tog{position:relative;display:inline-block;width:46px;height:26px;flex:none}
   .tog input{opacity:0;width:0;height:0}
@@ -142,7 +144,7 @@
       </div>
       <div class="mrow">
         <div class="t">精錬RN128：<b>1e10</b> ペナルティ弱化<small>指数 = 0.5 + 0.05×Lv（Lv10で無効）</small></div>
-        <div class="ctl"><input type="number" id="rn128" value="0" min="0" max="10" step="1"><span class="u">Lv</span></div>
+        <div class="ctl"><label class="chk"><input type="checkbox" id="rn128chk">MAX</label><input type="number" id="rn128" value="0" min="0" max="10" step="1"><span class="u">Lv</span></div>
       </div>
       <div class="mrow">
         <div class="t">特異点ツリー3.1：<b>1.8e308</b> ペナルティの指数<small>元の値 0.12（1に近いほど弱い）</small></div>
@@ -190,6 +192,10 @@
 
   <div class="card">
     <h2><span class="n">5</span>ペナルティ区間ごとの内訳</h2>
+    <div class="seg" id="rateSeg">
+      <button data-rate="std" class="on">標準表記</button>
+      <button data-rate="exp">指数表記</button>
+    </div>
     <div class="scroll">
       <table id="segTable">
         <thead><tr><th>区間 (アトム)</th><th>累積指数 E</th><th>実効 ×/秒</th><th>桁数</th><th>所要時間</th></tr></thead>
@@ -251,11 +257,13 @@
     if(mant>=9.9995){ mant/=10; exp++; }
     return mant.toFixed(2)+"e"+exp;
   }
+  var rateMode="std";
+  // ゲーム表示に合わせた倍率表記（×1.0130 / ×100 / ×1.50e4 …）
   function fmtRate(logA){
     if(logA<=0) return "×1 以下";
-    var a=Math.pow(10,logA);
-    if(a<1e6 && isFinite(a)) return "×"+ (a<10? a.toFixed(4): a.toPrecision(4));
-    return "×10^"+logA.toFixed(3);
+    if(rateMode==="exp") return "×10^"+logA.toFixed(3);
+    if(logA<4){ var a=Math.pow(10,logA); return "×"+(a<10? a.toFixed(4): a.toPrecision(4)); }
+    return "×"+fmtLog(logA);
   }
   function fmtTime(s){
     if(!isFinite(s)) return "∞";
@@ -282,16 +290,17 @@
 
   var $=function(id){return document.getElementById(id);};
   var singMult=$("singMult"), curAtom=$("curAtom"), relic69=$("relic69"), singCnt=$("singCnt"),
-      rn126=$("rn126"), rn127=$("rn127"), rn128=$("rn128"),
+      rn126=$("rn126"), rn127=$("rn127"), rn128=$("rn128"), rn128chk=$("rn128chk"),
       tree31=$("tree31"), tree32=$("tree32"), tree62=$("tree62"),
       singSel=$("singSel"), singReq=$("singReq"), tgtAtom=$("tgtAtom"),
       singBox=$("singBox"), atomBox=$("atomBox");
   var mode="sing";
 
   (function(){
-    var html="";
-    for(var N=1;N<=100;N++){
-      html+='<option value="'+N+'"'+(N===1?' selected':'')+'>特異点 '+N+'　（'+fmtLog(reqLog10(N))+'）</option>';
+    // 特異点1〜10は同一(1.80e308)なので1項目に統合
+    var html='<option value="10" selected>特異点 1〜10　（'+fmtLog(reqLog10(10))+'）</option>';
+    for(var N=11;N<=100;N++){
+      html+='<option value="'+N+'">特異点 '+N+'　（'+fmtLog(reqLog10(N))+'）</option>';
     }
     singSel.innerHTML=html;
   })();
@@ -304,7 +313,7 @@
       atomBox.style.display = mode==="atom"?"":"none";
       // 「アトム量で指定」に切替時、ドロップダウンで選択中の必要アトム量を引き継ぐ
       if(mode==="atom"){ tgtAtom.value = fmtLog(reqLog10(parseInt(singSel.value,10))); }
-      calc();
+      update();
     });
   });
 
@@ -370,7 +379,7 @@
       var cls = th? (th.kind==="buf"?"buf":(th.e===1?"off":"pen")) : "";
       rows+='<tr class="'+cls+'"><td>'+fmtLog(lo)+' → '+fmtLog(hi)+'</td>'
           +'<td>'+Eseg.toPrecision(3)+'</td>'
-          +'<td>'+(logAseg>0?("×"+(Math.pow(10,logAseg)<10?Math.pow(10,logAseg).toFixed(4):"10^"+logAseg.toFixed(2))):"—")+'</td>'
+          +'<td>'+(logAseg>0?fmtRate(logAseg):"—")+'</td>'
           +'<td>'+span.toFixed(1)+'</td>'
           +'<td>'+fmtTime(t)+'</td></tr>';
     }
@@ -383,9 +392,53 @@
     $("segTable").querySelector("tbody").innerHTML=rows;
   }
 
-  [singMult,curAtom,relic69,singCnt,rn126,rn127,rn128,tree31,tree32,tree62,singSel,tgtAtom].forEach(function(el){
-    el.addEventListener("input",calc); el.addEventListener("change",calc);
+  // RN128 の MAX チェック（=Lv10）と数値の同期
+  rn128chk.addEventListener("change",function(){ rn128.value = rn128chk.checked?10:0; update(); });
+  rn128.addEventListener("input",function(){ rn128chk.checked = (parseInt(rn128.value,10)===10); });
+
+  // 区間の倍率表記トグル（標準／指数）
+  document.querySelectorAll("#rateSeg button").forEach(function(b){
+    b.addEventListener("click",function(){
+      document.querySelectorAll("#rateSeg button").forEach(function(x){x.classList.remove("on");});
+      b.classList.add("on"); rateMode=b.dataset.rate; update();
+    });
   });
+
+  // ---- 設定値の保存/復元 ----
+  var STORE="revoidle-sing-calc";
+  var FIELDS=["singMult","curAtom","relic69","singCnt","rn128","tree31","tree32","tree62","tgtAtom","singSel"];
+  var CHECKS=["rn126","rn127","rn128chk"];
+  function save(){
+    try{
+      var o={mode:mode, rateMode:rateMode};
+      FIELDS.forEach(function(id){ o[id]=$(id).value; });
+      CHECKS.forEach(function(id){ o[id]=$(id).checked; });
+      localStorage.setItem(STORE,JSON.stringify(o));
+    }catch(e){}
+  }
+  function load(){
+    try{
+      var raw=localStorage.getItem(STORE); if(!raw) return;
+      var o=JSON.parse(raw);
+      FIELDS.forEach(function(id){ if(o[id]!=null && $(id)) $(id).value=o[id]; });
+      CHECKS.forEach(function(id){ if(o[id]!=null && $(id)) $(id).checked=o[id]; });
+      if(o.rateMode){ rateMode=o.rateMode;
+        document.querySelectorAll("#rateSeg button").forEach(function(x){x.classList.toggle("on",x.dataset.rate===rateMode);});
+      }
+      if(o.mode){ mode=o.mode;
+        document.querySelectorAll("#modeSeg button").forEach(function(x){x.classList.toggle("on",x.dataset.mode===mode);});
+        singBox.style.display = mode==="sing"?"":"none";
+        atomBox.style.display = mode==="atom"?"":"none";
+      }
+      rn128chk.checked = (parseInt(rn128.value,10)===10);
+    }catch(e){}
+  }
+  function update(){ calc(); save(); }
+
+  [singMult,curAtom,relic69,singCnt,rn126,rn127,rn128,tree31,tree32,tree62,singSel,tgtAtom].forEach(function(el){
+    el.addEventListener("input",update); el.addEventListener("change",update);
+  });
+  load();
   calc();
 })();
 </script>
