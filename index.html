@@ -1,0 +1,343 @@
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>特異点 到達時間計算機 | Revolution Idle</title>
+<meta name="description" content="Revolution Idle の特異点(Singularity)で、アトムのペナルティを考慮した実際の到達時間を計算するツール" />
+<style>
+  :root{
+    --bg:#0b0d17; --bg2:#141830; --card:#181c34; --card2:#1f2444;
+    --line:#2c3358; --txt:#e7e9f5; --sub:#9aa0c8; --dim:#6b719c;
+    --acc:#8b7bff; --acc2:#57e0c8; --warn:#ffb454; --bad:#ff6b81; --ok:#57e0c8;
+    --mono:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:radial-gradient(1200px 700px at 80% -10%,#1a1e3d 0,var(--bg) 55%);
+    color:var(--txt); font-family:"Segoe UI","Hiragino Kaku Gothic ProN","Noto Sans JP",system-ui,sans-serif;
+    line-height:1.6; -webkit-text-size-adjust:100%;
+  }
+  .wrap{max-width:860px;margin:0 auto;padding:28px 18px 80px}
+  header h1{font-size:1.5rem;margin:0 0 4px;letter-spacing:.02em}
+  header h1 .g{background:linear-gradient(90deg,var(--acc),var(--acc2));-webkit-background-clip:text;background-clip:text;color:transparent}
+  header p{color:var(--sub);margin:0 0 22px;font-size:.9rem}
+  .card{background:linear-gradient(180deg,var(--card),var(--card2));border:1px solid var(--line);border-radius:16px;padding:18px 18px 20px;margin-bottom:18px;box-shadow:0 10px 30px -18px #000}
+  .card h2{font-size:.95rem;margin:0 0 14px;color:var(--acc2);font-weight:600;letter-spacing:.03em;display:flex;align-items:center;gap:8px}
+  .card h2 .n{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:7px;background:#2a2f57;color:var(--acc);font-size:.75rem;font-weight:700}
+  label{display:block;font-size:.82rem;color:var(--sub);margin:0 0 6px}
+  .hint{font-size:.72rem;color:var(--dim);margin:4px 0 0}
+  input[type=text],select,input[type=number]{
+    width:100%;background:#0e1124;border:1px solid var(--line);color:var(--txt);
+    border-radius:10px;padding:11px 12px;font-size:1rem;font-family:var(--mono);outline:none;transition:border .15s,box-shadow .15s
+  }
+  input:focus,select:focus{border-color:var(--acc);box-shadow:0 0 0 3px #8b7bff33}
+  select{font-family:inherit}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .field{margin-bottom:14px}
+  .field:last-child{margin-bottom:0}
+  .seg{display:flex;gap:8px;margin-bottom:12px}
+  .seg button{flex:1;background:#0e1124;border:1px solid var(--line);color:var(--sub);padding:9px;border-radius:9px;font-size:.85rem;cursor:pointer;transition:.15s}
+  .seg button.on{background:#2a2f57;color:var(--txt);border-color:var(--acc)}
+  details.adv{margin-top:6px;border-top:1px dashed var(--line);padding-top:12px}
+  details.adv summary{cursor:pointer;color:var(--dim);font-size:.8rem;list-style:none}
+  details.adv summary::-webkit-details-marker{display:none}
+  details.adv summary:before{content:"▸ ";color:var(--acc)}
+  details.adv[open] summary:before{content:"▾ "}
+
+  /* result */
+  .result{text-align:center;padding:8px 0 4px}
+  .result .lbl{color:var(--sub);font-size:.82rem;margin-bottom:2px}
+  .result .big{font-size:2.4rem;font-weight:700;line-height:1.15;font-family:var(--mono);
+    background:linear-gradient(90deg,var(--acc),var(--acc2));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .result .sub{color:var(--dim);font-size:.82rem;font-family:var(--mono);margin-top:4px}
+  .stat{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
+  .stat .b{background:#0e1124;border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+  .stat .b .k{font-size:.72rem;color:var(--dim)}
+  .stat .b .v{font-size:.98rem;font-family:var(--mono);color:var(--txt);word-break:break-all}
+  .msg{border-radius:10px;padding:11px 13px;font-size:.86rem;margin-top:4px}
+  .msg.bad{background:#ff6b8118;border:1px solid #ff6b8155;color:#ffb3bf}
+  .msg.ok{background:#57e0c815;border:1px solid #57e0c844;color:#a9f2e4}
+
+  table{width:100%;border-collapse:collapse;font-size:.8rem;margin-top:6px}
+  .scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  th,td{padding:7px 9px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap;font-family:var(--mono)}
+  th{color:var(--sub);font-weight:600;font-family:inherit;font-size:.75rem;position:sticky;top:0;background:var(--card2)}
+  td:first-child,th:first-child{text-align:left}
+  tr td{color:var(--txt)}
+  tr.pen td:first-child{color:var(--bad)}
+  tr.buf td:first-child{color:var(--ok)}
+  .foot{color:var(--dim);font-size:.76rem;margin-top:10px}
+  .foot code{background:#0e1124;padding:1px 5px;border-radius:5px;color:var(--acc2)}
+  a{color:var(--acc2)}
+  .pill{display:inline-block;background:#0e1124;border:1px solid var(--line);border-radius:999px;padding:2px 9px;font-size:.72rem;color:var(--sub);font-family:var(--mono)}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1><span class="g">特異点</span> 到達時間計算機</h1>
+    <p>Revolution Idle ─ アトムのペナルティを考慮した「実際にかかる時間」を計算します</p>
+  </header>
+
+  <div class="card">
+    <h2><span class="n">1</span>現在の状態</h2>
+    <div class="row">
+      <div class="field">
+        <label>現在のアトム量</label>
+        <input id="curAtom" type="text" value="1.8e308" inputmode="text" />
+        <p class="hint">例: <code style="all:unset">1.8e308</code> / <code style="all:unset">1e1000</code></p>
+      </div>
+      <div class="field">
+        <label>毎秒獲得倍率 (×◯◯ /秒)</label>
+        <input id="rate" type="text" value="1.013" inputmode="text" />
+        <p class="hint">アトム表示の下にある「×◯◯/秒」の値</p>
+      </div>
+    </div>
+    <details class="adv">
+      <summary>詳細設定</summary>
+      <div class="field" style="margin-top:12px">
+        <label>遺物69の値（1e6強化の指数, 1.0〜2.0程度）</label>
+        <input id="relic69" type="number" value="1.0" step="0.05" min="0" />
+        <p class="hint">現在アトムと目標が共に1e6超なら結果にほぼ影響しません。既定=1.0</p>
+      </div>
+    </details>
+  </div>
+
+  <div class="card">
+    <h2><span class="n">2</span>目標</h2>
+    <div class="seg" id="modeSeg">
+      <button data-mode="sing" class="on">特異点の回数で指定</button>
+      <button data-mode="atom">アトム量で指定</button>
+    </div>
+    <div id="singBox" class="field">
+      <label>目標の特異点回数</label>
+      <select id="singSel"></select>
+      <p class="hint" id="singReq"></p>
+    </div>
+    <div id="atomBox" class="field" style="display:none">
+      <label>目標アトム量</label>
+      <input id="tgtAtom" type="text" value="1e696" inputmode="text" />
+      <p class="hint">例: <code style="all:unset">1e696</code></p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div id="msg"></div>
+    <div class="result">
+      <div class="lbl">到達までの推定時間</div>
+      <div class="big" id="timeBig">—</div>
+      <div class="sub" id="timeSub"></div>
+    </div>
+    <div class="stat">
+      <div class="b"><div class="k">現在の実効レート</div><div class="v" id="stCur">—</div></div>
+      <div class="b"><div class="k">目標地点の実効レート</div><div class="v" id="stTgt">—</div></div>
+      <div class="b"><div class="k">推定ベース倍率 B（ペナルティ無し）</div><div class="v" id="stB">—</div></div>
+      <div class="b"><div class="k">伸ばす桁数 (log₁₀)</div><div class="v" id="stDelta">—</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2><span class="n">3</span>ペナルティ区間ごとの内訳</h2>
+    <div class="scroll">
+      <table id="segTable">
+        <thead><tr><th>区間 (アトム)</th><th>累積指数 E</th><th>実効 ×/秒</th><th>桁数</th><th>所要時間</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <p class="foot">アトム量が閾値を超えるたびに「原子獲得量」が累乗され、実効レートが下がります（例: 1e10で^0.5、1e308で^0.12、1e500で^0.05）。この区間ごとの減速を積み上げたものが実際の時間です。</p>
+  </div>
+
+  <div class="card">
+    <h2><span class="n">i</span>計算モデルと前提</h2>
+    <p class="foot" style="line-height:1.75">
+      アトムは毎秒 <code style="all:unset;color:var(--acc2)">a</code> 倍で増えるため、目標到達までの秒数は
+      <code style="all:unset;color:var(--acc2)">t = log₁₀(目標/現在) ÷ log₁₀(a)</code> で求まります。<br>
+      入力した「毎秒獲得倍率」は現在アトム量でのペナルティ適用後の実効値とみなし、そこからペナルティ無しのベース倍率 <code style="all:unset;color:var(--acc2)">B</code> を逆算。各ペナルティ区間の実効レート <code style="all:unset;color:var(--acc2)">B^E</code> を用いて区間ごとに時間を積算しています。<br>
+      <span class="pill">前提</span> 特異点倍率・元素等のベース獲得量は周回中一定。ツリー/精錬による各ペナルティの弱化、サクリファイスダスト・拡散力系の強化は未反映（安全側の見積り）。必要アトム量は wiki 記載の区間式に基づき近似値です。
+    </p>
+    <p class="foot">出典: <a href="https://wikiwiki.jp/revoidle/Singularity" target="_blank" rel="noopener">Revolution Idle Wiki ─ 特異点</a></p>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  // ---- 原子獲得量に累乗ペナルティ/強化を与える閾値（log10, 指数）----
+  // relic69 は 1e6 の強化指数（可変, 既定1.0）
+  function thresholds(relic69){
+    return [
+      {log:6,            e:relic69, buf:true },  // 1e6   強化 ^遺物69
+      {log:10,           e:0.5,     buf:false},  // 1e10  ペナ ^0.5
+      {log:50,           e:0.833,   buf:false},  // 1e50  ペナ ^0.833
+      {log:154.146,      e:0.847,   buf:false},  // 1.4e154 ^0.847
+      {log:256.204,      e:0.714,   buf:false},  // 1.6e256 ^0.714
+      {log:308.255,      e:0.12,    buf:false},  // 1.8e308 ^0.12
+      {log:500,          e:0.05,    buf:false},  // 1e500 ^0.05
+      {log:1000,         e:0.033,   buf:false},  // 1e1000 ^0.033
+      {log:2000,         e:0.5,     buf:false},  // 1e2000 ^0.5
+      {log:3000,         e:0.333,   buf:false},  // 1e3000 ^0.333
+      {log:5000,         e:0.2,     buf:false},  // 1e5000 ^0.2
+      {log:10000,        e:0.1,     buf:false}   // 1e10000 ^0.1
+    ];
+  }
+  // 累積指数 E(x): x（アトムのlog10）以下の全閾値の指数の積
+  function Eat(x, ths){ var p=1; for(var i=0;i<ths.length;i++){ if(ths[i].log<=x+1e-9) p*=ths[i].e; } return p; }
+
+  // ---- 入力パース: 文字列 -> log10値 ----
+  function parseLog10(s){
+    if(s==null) return null;
+    s=(""+s).trim().replace(/,/g,'');
+    if(!s) return null;
+    var m=s.match(/^([0-9]*\.?[0-9]+)\s*[eE]\s*([+-]?[0-9]+)$/);
+    if(m){ var mant=parseFloat(m[1]); if(!(mant>0)) return null; return Math.log10(mant)+parseInt(m[2],10); }
+    var v=parseFloat(s);
+    if(isFinite(v)&&v>0) return Math.log10(v);
+    return null;
+  }
+  // log10値 -> "1.8e308" 表示
+  function fmtLog(x){
+    if(!isFinite(x)) return "∞";
+    var exp=Math.floor(x); var mant=Math.pow(10,x-exp);
+    if(mant>=9.9995){ mant/=10; exp++; }
+    return mant.toFixed(2)+"e"+exp;
+  }
+  // 実効 ×/秒 表示（log10(a)から）
+  function fmtRate(logA){
+    if(logA<=0) return "×1 以下";
+    var a=Math.pow(10,logA);
+    if(a<1e6 && isFinite(a)) return "×"+ (a<10? a.toFixed(4): a.toPrecision(4));
+    return "×"+fmtLog(logA)+"（10^"+logA.toFixed(3)+"）";
+  }
+  // 秒 -> 人間可読
+  function fmtTime(s){
+    if(!isFinite(s)) return "∞";
+    if(s<=0) return "0秒";
+    if(s<1) return "1秒未満";
+    var Y=31557600;
+    if(s>Y*1000){ return (s/Y).toExponential(2)+" 年"; }
+    var u=[["年",Y],["日",86400],["時間",3600],["分",60],["秒",1]];
+    var parts=[],rem=s;
+    for(var i=0;i<u.length;i++){
+      if(rem>=u[i][1]){ var v=Math.floor(rem/u[i][1]); rem-=v*u[i][1]; parts.push(v+u[i][0]); }
+      if(parts.length>=2) break;
+    }
+    return parts.length?parts.join(" "):"1秒未満";
+  }
+
+  // ---- 特異点N に到達する（=回数Nを得る特異化）ための必要アトム量(log10) ----
+  // wikiの必要アトム量は「1つ前の回数」基準の式。reach(N)=F(N-1)。
+  // 検証: N=16→1e420, N=20→1e500, N=32→1e696, N=64→1e1130, N=72→1e1271（全てwiki記載値に一致）
+  function reqLog10(N){
+    if(N<=10) return 308.2553;             // 回数1〜10は 1.80e308 固定
+    if(N<=21) return 20*(N-1)+120;         // 回数11〜21
+    if(N<=51) return 16*(N-1)+200;         // 回数22〜51
+    if(N<=71) return 10*(N-1)+500;         // 回数52〜71
+    return (N-1)*(N-1-70)+1200;            // 回数72以降
+  }
+
+  // ---- DOM ----
+  var $=function(id){return document.getElementById(id);};
+  var curAtom=$("curAtom"), rate=$("rate"), relic69=$("relic69"),
+      singSel=$("singSel"), singReq=$("singReq"), tgtAtom=$("tgtAtom"),
+      singBox=$("singBox"), atomBox=$("atomBox");
+  var mode="sing";
+
+  // 特異点セレクト生成
+  (function(){
+    var html="";
+    for(var N=1;N<=100;N++){
+      var L=reqLog10(N);
+      html+='<option value="'+N+'"'+(N===32?' selected':'')+'>特異点 '+N+'　（'+fmtLog(L)+'）</option>';
+    }
+    singSel.innerHTML=html;
+  })();
+
+  document.querySelectorAll("#modeSeg button").forEach(function(b){
+    b.addEventListener("click",function(){
+      document.querySelectorAll("#modeSeg button").forEach(function(x){x.classList.remove("on");});
+      b.classList.add("on"); mode=b.dataset.mode;
+      singBox.style.display = mode==="sing"?"":"none";
+      atomBox.style.display = mode==="atom"?"":"none";
+      calc();
+    });
+  });
+
+  function targetLog(){
+    if(mode==="sing"){ return reqLog10(parseInt(singSel.value,10)); }
+    return parseLog10(tgtAtom.value);
+  }
+
+  function msg(type,txt){
+    $("msg").innerHTML = txt? '<div class="msg '+type+'">'+txt+'</div>' : '';
+  }
+  function clearOut(){
+    $("timeBig").textContent="—"; $("timeSub").textContent="";
+    $("stCur").textContent="—"; $("stTgt").textContent="—"; $("stB").textContent="—"; $("stDelta").textContent="—";
+    $("segTable").querySelector("tbody").innerHTML="";
+  }
+
+  function calc(){
+    var x0=parseLog10(curAtom.value);
+    var x1=targetLog();
+    var logRate=parseLog10(rate.value);
+    var r69=parseFloat(relic69.value); if(!isFinite(r69)||r69<0) r69=1.0;
+    var ths=thresholds(r69);
+
+    if(mode==="sing"){ singReq.textContent="必要アトム量 ≈ "+fmtLog(x1); }
+
+    if(x0==null){ msg("bad","現在のアトム量の形式が不正です（例: 1.8e308）"); clearOut(); return; }
+    if(x1==null){ msg("bad","目標アトム量の形式が不正です（例: 1e696）"); clearOut(); return; }
+    if(logRate==null){ msg("bad","毎秒獲得倍率の形式が不正です（例: 1.013）"); clearOut(); return; }
+    if(logRate<=0){ msg("bad","毎秒獲得倍率が ×1 以下ではアトムが増えません。"); clearOut(); return; }
+    if(x1<=x0){ msg("ok","目標アトム量に既に到達しています（所要時間 0）。");
+      $("timeBig").textContent="到達済み"; $("timeSub").textContent="";
+      var Ec0=Eat(x0,ths);
+      $("stCur").textContent=fmtRate(logRate);
+      $("stTgt").textContent="—";
+      $("stB").textContent=fmtRate(logRate/Ec0);
+      $("stDelta").textContent="0 桁";
+      $("segTable").querySelector("tbody").innerHTML=""; return;
+    }
+    msg("","");
+
+    // ベース倍率 B: 現在レート = B^E(x0) -> log10(B) = logRate / E(x0)
+    var Ecur=Eat(x0,ths);
+    var logB=logRate/Ecur;               // log10(B)
+
+    // 区間の境界点を作る
+    var bounds=[x0];
+    for(var i=0;i<ths.length;i++){ if(ths[i].log>x0+1e-9 && ths[i].log<x1-1e-9) bounds.push(ths[i].log); }
+    bounds.push(x1); bounds.sort(function(a,b){return a-b;});
+
+    var total=0, rows="";
+    for(var k=0;k<bounds.length-1;k++){
+      var lo=bounds[k], hi=bounds[k+1];
+      var mid=(lo+hi)/2;
+      var Eseg=Eat(mid,ths);
+      var logAseg=Eseg*logB;             // その区間の log10(実効/秒)
+      var span=hi-lo;                    // 伸ばす桁数
+      var t = logAseg>0 ? span/logAseg : Infinity;
+      total+=t;
+      // この区間の直後に適用される閾値（=hiの閾値）で色付け
+      var th=null; for(var j=0;j<ths.length;j++){ if(Math.abs(ths[j].log-hi)<1e-6){ th=ths[j]; break; } }
+      var cls = th? (th.buf?"buf":"pen") : "";
+      rows+='<tr class="'+cls+'"><td>'+fmtLog(lo)+' → '+fmtLog(hi)+'</td>'
+          +'<td>'+Eseg.toPrecision(3)+'</td>'
+          +'<td>'+(logAseg>0?("×"+ (Math.pow(10,logAseg)<10? Math.pow(10,logAseg).toFixed(4): "10^"+logAseg.toFixed(2)) ):"—")+'</td>'
+          +'<td>'+span.toFixed(1)+'</td>'
+          +'<td>'+fmtTime(t)+'</td></tr>';
+    }
+
+    $("timeBig").textContent=fmtTime(total);
+    $("timeSub").textContent="= "+Math.round(total).toLocaleString()+" 秒";
+    $("stCur").textContent=fmtRate(logRate);
+    $("stTgt").textContent=fmtRate(Eat(x1,ths)*logB);
+    $("stB").textContent=fmtRate(logB);
+    $("stDelta").textContent=(x1-x0).toFixed(1)+" 桁";
+    $("segTable").querySelector("tbody").innerHTML=rows;
+  }
+
+  [curAtom,rate,relic69,singSel,tgtAtom].forEach(function(el){
+    el.addEventListener("input",calc); el.addEventListener("change",calc);
+  });
+  calc();
+})();
+</script>
