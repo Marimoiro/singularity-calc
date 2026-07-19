@@ -156,16 +156,16 @@
         <div class="ctl"><label class="chk"><input type="checkbox" id="rn128chk">MAX</label><input type="number" id="rn128" value="0" min="0" max="10" step="1"><span class="u">Lv</span></div>
       </div>
       <div class="mrow">
-        <div class="t">ツリー3.1：<b>1.8e308</b> ペナルティ弱化<small>ツリー表記の値 x（初期1）。実効指数 = 0.12 × x</small></div>
-        <div class="ctl"><input type="number" id="tree31" value="1" min="1" step="0.01"><span class="u">/x</span></div>
+        <div class="t">ツリー3.1：<b>1.8e308</b> ペナルティ弱化<small>ツリー表記の値 x（1〜約1.2）。実効指数 = 0.12 / (2 − x)</small></div>
+        <div class="ctl"><input type="number" id="tree31" value="1" min="1" step="0.001"><span class="u">/x</span></div>
       </div>
       <div class="mrow">
-        <div class="t">ツリー3.2：<b>1e500</b> ペナルティ弱化<small>ツリー表記の値 x（初期1）。実効指数 = 0.05 × x</small></div>
-        <div class="ctl"><input type="number" id="tree32" value="1" min="1" step="0.01"><span class="u">/x</span></div>
+        <div class="t">ツリー3.2：<b>1e500</b> ペナルティ弱化<small>ツリー表記の値 x（1〜約1.2）。実効指数 = 0.05 / (2 − x)</small></div>
+        <div class="ctl"><input type="number" id="tree32" value="1" min="1" step="0.001"><span class="u">/x</span></div>
       </div>
       <div class="mrow">
-        <div class="t">ツリー6.2：<b>1e1000</b> ペナルティ弱化<small>ツリー表記の値 x（初期1）。実効指数 = 0.033 × x</small></div>
-        <div class="ctl"><input type="number" id="tree62" value="1" min="1" step="0.01"><span class="u">/x</span></div>
+        <div class="t">ツリー6.2：<b>1e1000</b> ペナルティ弱化<small>ツリー表記の値 x（1〜約1.2）。実効指数 = 0.033 / (2 − x)</small></div>
+        <div class="ctl"><input type="number" id="tree62" value="1" min="1" step="0.001"><span class="u">/x</span></div>
       </div>
     </div>
   </div>
@@ -338,13 +338,12 @@
     var r69=parseFloat(relic69.value); if(!isFinite(r69)||r69<0) r69=1.0;
     var sc=parseFloat(singCnt.value); if(!isFinite(sc)||sc<0) sc=1.0;
     var vir = virus.checked ? 1.02 : 0.02;
-    // ツリー表記 /x（初期1）。実効ペナルティ指数 = 元の指数 × x（上限1）
-    var x31=parseFloat(tree31.value); if(!isFinite(x31)||x31<=0) x31=1;
-    var x32=parseFloat(tree32.value); if(!isFinite(x32)||x32<=0) x32=1;
-    var x62=parseFloat(tree62.value); if(!isFinite(x62)||x62<=0) x62=1;
-    var t31=Math.min(1, 0.12*x31);
-    var t32=Math.min(1, 0.05*x32);
-    var t62=Math.min(1, 0.033*x62);
+    // ツリー表記 /x（初期1、1〜約1.2）。実効ペナルティ指数 = base / (2 − x)（上限1）
+    // 実測2点(x1.1516→0.141, x1.1549→0.142)が base=0.12・定数2でぴったり一致
+    function treeExp(base,x){ if(!isFinite(x)||x<1) x=1; var d=2-x; return d<=0?1:Math.min(1, base/d); }
+    var t31=treeExp(0.12,  parseFloat(tree31.value));
+    var t32=treeExp(0.05,  parseFloat(tree32.value));
+    var t62=treeExp(0.033, parseFloat(tree62.value));
     var l128=parseInt(rn128.value,10); if(!isFinite(l128)||l128<0) l128=0; if(l128>10) l128=10;
     return {relic69:r69, singCnt:sc, virus:vir, rn126:rn126.checked, rn127:rn127.checked, rn128:l128,
             tree31:t31, tree32:t32, tree62:t62};
