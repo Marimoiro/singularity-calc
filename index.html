@@ -89,6 +89,8 @@
   .foot code{background:#0e1124;padding:1px 5px;border-radius:5px;color:var(--acc2)}
   a{color:var(--acc2)}
   .pill{display:inline-block;background:#0e1124;border:1px solid var(--line);border-radius:999px;padding:2px 9px;font-size:.72rem;color:var(--sub);font-family:var(--mono)}
+  .btn{background:#2a2f57;border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:9px 14px;font-size:.82rem;cursor:pointer;transition:.15s;margin-top:12px}
+  .btn:hover{border-color:var(--acc)}
 </style>
 
 <div class="wrap">
@@ -198,11 +200,12 @@
     </div>
     <div class="scroll">
       <table id="segTable">
-        <thead><tr><th>区間 (アトム)</th><th>累積指数 E</th><th>実効 ×/秒</th><th>桁数</th><th>所要時間</th></tr></thead>
+        <thead><tr><th>区間 (アトム)</th><th>累積指数 E</th><th>実効 ×/秒</th><th title="この区間で伸びるアトムの桁幅(log₁₀)">桁幅</th><th>所要時間</th></tr></thead>
         <tbody></tbody>
       </table>
     </div>
     <p class="foot">アトム量が閾値を超えるたびに「原子獲得量」が累乗され、実効レートが下がります。軽減設定を有効にすると該当区間のペナルティが緩みます。</p>
+    <button class="btn" id="copyBtn">設定と結果をコピー</button>
   </div>
 
   <div class="card">
@@ -438,6 +441,41 @@
     }catch(e){}
   }
   function update(){ calc(); save(); }
+
+  // ---- デバッグ用: 設定と結果をコピー ----
+  function buildDebug(){
+    var s=settings();
+    var L=[];
+    L.push("[特異点 到達時間計算機 デバッグ]");
+    L.push("特異点倍率="+singMult.value+"  現在アトム="+curAtom.value);
+    L.push("バフ: 特異点回数アトム倍率="+singCnt.value+"  遺物69="+relic69.value);
+    L.push("軽減: RN126="+(rn126.checked?"ON":"OFF")+"  RN127="+(rn127.checked?"ON":"OFF")+"  RN128=Lv"+rn128.value
+         +"  ツリー3.1 x="+tree31.value+"(実効"+s.tree31.toFixed(4)+")"
+         +"  3.2 x="+tree32.value+"(実効"+s.tree32.toFixed(4)+")"
+         +"  6.2 x="+tree62.value+"(実効"+s.tree62.toFixed(4)+")");
+    L.push("目標: "+(mode==="sing"?("特異点 "+singSel.value):("アトム "+tgtAtom.value))+"  必要="+$("stReq").textContent);
+    L.push("倍率表記="+rateMode);
+    L.push("--- 結果 ---");
+    L.push("総時間="+$("timeBig").textContent+"  ("+$("timeSub").textContent+")");
+    L.push("基準倍率B="+$("stB").textContent+"  目標地点の実効="+$("stTgt").textContent+"  伸ばす桁="+$("stDelta").textContent);
+    L.push("--- 区間内訳 (区間 | E | 実効/秒 | 桁幅 | 時間) ---");
+    Array.prototype.forEach.call(document.querySelectorAll("#segTable tbody tr"),function(r){
+      L.push(Array.prototype.map.call(r.children,function(c){return c.textContent;}).join(" | "));
+    });
+    return L.join("\n");
+  }
+  var copyBtn=$("copyBtn"), COPYLABEL=copyBtn.textContent;
+  copyBtn.addEventListener("click",function(){
+    var txt=buildDebug();
+    function done(){ copyBtn.textContent="コピーしました ✓"; setTimeout(function(){ copyBtn.textContent=COPYLABEL; },1500); }
+    function fallback(){
+      var ta=document.createElement("textarea"); ta.value=txt;
+      ta.style.position="fixed"; ta.style.opacity="0"; document.body.appendChild(ta); ta.select();
+      try{ document.execCommand("copy"); }catch(e){} document.body.removeChild(ta); done();
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(txt).then(done,fallback); }
+    else fallback();
+  });
 
   [singMult,curAtom,relic69,singCnt,rn126,rn127,rn128,tree31,tree32,tree62,singSel,tgtAtom].forEach(function(el){
     el.addEventListener("input",update); el.addEventListener("change",update);
