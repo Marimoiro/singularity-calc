@@ -1,7 +1,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>特異点 到達時間計算機 | Revolution Idle</title>
-<meta name="description" content="Revolution Idle の特異点(Singularity)で、アトムのペナルティと精錬ツリー軽減を考慮した実際の到達時間を計算するツール" />
+<meta name="description" content="Estimate the real time to reach a Singularity in Revolution Idle, accounting for atom penalties and refine-tree mitigations." />
 <style>
   :root{
     --bg:#0b0d17; --bg2:#141830; --card:#181c34; --card2:#1f2444;
@@ -17,12 +17,16 @@
     line-height:1.6; -webkit-text-size-adjust:100%;
   }
   .wrap{max-width:880px;margin:0 auto;padding:28px 18px 80px}
-  header h1{font-size:1.5rem;margin:0 0 4px;letter-spacing:.02em}
+  header{position:relative}
+  header h1{font-size:1.5rem;margin:0 0 4px;letter-spacing:.02em;padding-right:120px}
   header h1 .g{background:linear-gradient(90deg,var(--acc),var(--acc2));-webkit-background-clip:text;background-clip:text;color:transparent}
   header p{color:var(--sub);margin:0 0 22px;font-size:.9rem}
+  .langsw{position:absolute;top:0;right:0;display:flex;gap:6px}
+  .langsw button{background:#0e1124;border:1px solid var(--line);color:var(--sub);border-radius:8px;padding:5px 10px;font-size:.75rem;cursor:pointer;transition:.15s}
+  .langsw button.on{background:#2a2f57;color:var(--txt);border-color:var(--acc)}
   .card{background:linear-gradient(180deg,var(--card),var(--card2));border:1px solid var(--line);border-radius:16px;padding:18px 18px 20px;margin-bottom:18px;box-shadow:0 10px 30px -18px #000}
   .card h2{font-size:.95rem;margin:0 0 14px;color:var(--acc2);font-weight:600;letter-spacing:.03em;display:flex;align-items:center;gap:8px}
-  .card h2 .n{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:7px;background:#2a2f57;color:var(--acc);font-size:.75rem;font-weight:700}
+  .card h2 .n{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:7px;background:#2a2f57;color:var(--acc);font-size:.75rem;font-weight:700;flex:none}
   label{display:block;font-size:.82rem;color:var(--sub);margin:0 0 6px}
   .hint{font-size:.72rem;color:var(--dim);margin:4px 0 0}
   input[type=text],select,input[type=number]{
@@ -38,13 +42,7 @@
   .seg{display:flex;gap:8px;margin-bottom:12px}
   .seg button{flex:1;background:#0e1124;border:1px solid var(--line);color:var(--sub);padding:9px;border-radius:9px;font-size:.85rem;cursor:pointer;transition:.15s}
   .seg button.on{background:#2a2f57;color:var(--txt);border-color:var(--acc)}
-  details.adv{margin-top:6px;border-top:1px dashed var(--line);padding-top:12px}
-  details.adv summary{cursor:pointer;color:var(--dim);font-size:.8rem;list-style:none}
-  details.adv summary::-webkit-details-marker{display:none}
-  details.adv summary:before{content:"▸ ";color:var(--acc)}
-  details.adv[open] summary:before{content:"▾ "}
 
-  /* mitigation grid */
   .mit{display:grid;grid-template-columns:1fr;gap:10px}
   .mrow{display:grid;grid-template-columns:1fr auto;align-items:center;gap:12px;background:#0e1124;border:1px solid var(--line);border-radius:11px;padding:10px 13px}
   .mrow .t{font-size:.85rem;color:var(--txt)}
@@ -54,7 +52,6 @@
   .mrow .ctl .u{font-size:.72rem;color:var(--dim);font-family:var(--mono)}
   .mrow .ctl .chk{display:flex;align-items:center;gap:4px;font-size:.72rem;color:var(--sub);cursor:pointer;white-space:nowrap}
   .mrow .ctl .chk input{width:auto;margin:0;accent-color:var(--acc2)}
-  /* toggle */
   .tog{position:relative;display:inline-block;width:46px;height:26px;flex:none}
   .tog input{opacity:0;width:0;height:0}
   .tog .sl{position:absolute;inset:0;background:#2a2f57;border:1px solid var(--line);border-radius:999px;transition:.15s;cursor:pointer}
@@ -97,92 +94,96 @@
 
 <div class="wrap">
   <header>
-    <h1><span class="g">特異点</span> 到達時間計算機</h1>
-    <p>Revolution Idle ─ アトムのペナルティと精錬軽減を考慮した「実際にかかる時間」を計算します</p>
+    <div class="langsw">
+      <button data-lang="ja">日本語</button>
+      <button data-lang="en">EN</button>
+    </div>
+    <h1><span class="g" data-i18n="h1a">特異点</span><span data-i18n="h1b"> 到達時間計算機</span></h1>
+    <p data-i18n="headerP">Revolution Idle ─ アトムのペナルティと精錬軽減を考慮した「実際にかかる時間」を計算します</p>
   </header>
 
   <div class="card">
-    <h2><span class="n">1</span>基本</h2>
+    <h2><span class="n">1</span><span data-i18n="c1">基本</span></h2>
     <div class="row">
       <div class="field">
-        <label>特異点倍率</label>
+        <label data-i18n="singMultL">特異点倍率</label>
         <input id="singMult" type="text" value="1" inputmode="text" />
-        <p class="hint">特異点タブの倍率。例: <code style="all:unset">100</code> / <code style="all:unset">1e4</code></p>
+        <p class="hint" data-i18n-html="singMultH"></p>
       </div>
       <div class="field">
-        <label>現在のアトム量</label>
+        <label data-i18n="curAtomL">現在のアトム量</label>
         <input id="curAtom" type="text" value="1" inputmode="text" />
-        <p class="hint">既定 <code style="all:unset">1</code>（周回開始）。途中から計算したい時のみ変更</p>
+        <p class="hint" data-i18n-html="curAtomH"></p>
       </div>
     </div>
     <div class="field" style="margin-top:14px">
-      <label>ローカル速度</label>
+      <label data-i18n="localSpeedL">ローカル速度</label>
       <input id="localSpeed" type="text" value="1" inputmode="text" />
-      <p class="hint">特異点タブのローカル速度。2なら時間が2倍速で進む（所要時間が半分）。例 <code style="all:unset">1440</code></p>
+      <p class="hint" data-i18n-html="localSpeedH"></p>
     </div>
   </div>
 
   <div class="card">
-    <h2><span class="n">2</span>目標</h2>
+    <h2><span class="n">2</span><span data-i18n="c2">目標</span></h2>
     <div class="seg" id="modeSeg">
-      <button data-mode="sing" class="on">特異点の回数で指定</button>
-      <button data-mode="atom">アトム量で指定</button>
+      <button data-mode="sing" class="on" data-i18n="modeSing">特異点の回数で指定</button>
+      <button data-mode="atom" data-i18n="modeAtom">アトム量で指定</button>
     </div>
     <div id="singBox" class="field">
-      <label>目標の特異点回数</label>
+      <label data-i18n="singSelL">目標の特異点回数</label>
       <select id="singSel"></select>
       <p class="hint" id="singReq"></p>
     </div>
     <div id="atomBox" class="field" style="display:none">
-      <label>目標アトム量</label>
+      <label data-i18n="tgtAtomL">目標アトム量</label>
       <input id="tgtAtom" type="text" value="1.80e308" inputmode="text" />
-      <p class="hint">「特異点の回数で指定」で選んだ値を引き継ぎます。自由入力も可（例 <code style="all:unset">1e696</code>）</p>
+      <p class="hint" data-i18n-html="tgtAtomH"></p>
     </div>
   </div>
 
   <div class="card">
-    <h2><span class="n">3</span>ペナルティ軽減設定</h2>
+    <h2><span class="n">3</span><span data-i18n="c3">ペナルティ軽減設定</span></h2>
     <div class="mit">
       <div class="mrow">
-        <div class="t">RN126：<b>1e50</b> ペナルティを無効化<small>原子獲得量 ^0.833 → 無効</small></div>
+        <div class="t" data-i18n-html="rn126"></div>
         <div class="ctl"><label class="tog"><input type="checkbox" id="rn126"><span class="sl"></span></label></div>
       </div>
       <div class="mrow">
-        <div class="t">RN127：<b>1.4e154</b> ペナルティを無効化<small>原子獲得量 ^0.847 → 無効</small></div>
+        <div class="t" data-i18n-html="rn127"></div>
         <div class="ctl"><label class="tog"><input type="checkbox" id="rn127"><span class="sl"></span></label></div>
       </div>
       <div class="mrow">
-        <div class="t">RN128：<b>1e10</b> ペナルティ弱化<small>指数 = 0.5 + 0.05×Lv（Lv10で無効）</small></div>
+        <div class="t" data-i18n-html="rn128"></div>
         <div class="ctl"><label class="chk"><input type="checkbox" id="rn128chk">MAX</label><input type="number" id="rn128" value="0" min="0" max="10" step="1"><span class="u">Lv</span></div>
       </div>
       <div class="mrow">
-        <div class="t">ツリー3.1：<b>1.8e308</b> ペナルティ弱化<small>ツリー表記の値 x（1〜約1.2）。実効指数 = 0.12 / (2 − x)</small></div>
+        <div class="t" data-i18n-html="tree31"></div>
         <div class="ctl"><input type="number" id="tree31" value="1" min="1" step="0.001"><span class="u">/x</span></div>
       </div>
       <div class="mrow">
-        <div class="t">ツリー3.2：<b>1e500</b> ペナルティ弱化<small>ツリー表記の値 x（1〜約1.2）。実効指数 = 0.05 / (2 − x)</small></div>
+        <div class="t" data-i18n-html="tree32"></div>
         <div class="ctl"><input type="number" id="tree32" value="1" min="1" step="0.001"><span class="u">/x</span></div>
       </div>
       <div class="mrow">
-        <div class="t">ツリー6.2：<b>1e1000</b> ペナルティ弱化<small>ツリー表記の値 x（1〜約1.2）。実効指数 = 0.033 / (2 − x)</small></div>
+        <div class="t" data-i18n-html="tree62"></div>
         <div class="ctl"><input type="number" id="tree62" value="1" min="1" step="0.001"><span class="u">/x</span></div>
       </div>
     </div>
   </div>
 
   <div class="card">
-    <h2><span class="n">4</span>バフ（強化）</h2>
+    <h2><span class="n">4</span><span data-i18n="c4">バフ（強化）</span></h2>
     <div class="mit">
       <div class="mrow">
-        <div class="t">進行7 ウィルスの昇華<small>達成で 原子獲得量^1.02、未達成は ^0.02（重ペナルティ）</small></div>
+        <div class="t" data-i18n-html="virusL"></div>
         <div class="ctl"><label class="tog"><input type="checkbox" id="virus" checked><span class="sl"></span></label></div>
       </div>
       <div class="mrow">
-        <div class="t">特異点回数アトム倍率<small>アトム量1から常時 原子獲得量^この値（既定1＝効果なし）</small></div>
+        <div class="t" data-i18n-html="singCntL"></div>
         <div class="ctl"><input type="number" id="singCnt" value="1" min="0" step="0.01"><span class="u">^</span></div>
       </div>
       <div class="mrow">
-        <div class="t">遺物69<small>1e6以上で 原子獲得量^この値（1〜2程度、既定1）</small></div>
+        <div class="t" data-i18n-html="relic69L"></div>
         <div class="ctl"><input type="number" id="relic69" value="1.0" min="0" step="0.05"><span class="u">^</span></div>
       </div>
     </div>
@@ -191,64 +192,181 @@
   <div class="card">
     <div id="msg"></div>
     <div class="result">
-      <div class="lbl">到達までの推定時間</div>
+      <div class="lbl" data-i18n="resLbl">到達までの推定時間</div>
       <div class="big" id="timeBig">—</div>
       <div class="sub" id="timeSub"></div>
-      <div style="margin-top:12px"><label class="chkline"><input type="checkbox" id="localSpeedOn" checked>ローカル速度を反映</label></div>
+      <div style="margin-top:12px"><label class="chkline"><input type="checkbox" id="localSpeedOn" checked><span data-i18n="applyLS">ローカル速度を反映</span></label></div>
     </div>
     <div class="stat">
-      <div class="b"><div class="k">目標地点の実効レート</div><div class="v" id="stTgt">—</div></div>
-      <div class="b"><div class="k">基準倍率 B（ペナルティ無し）</div><div class="v" id="stB">—</div></div>
-      <div class="b"><div class="k">伸ばす桁数 (log₁₀)</div><div class="v" id="stDelta">—</div></div>
-      <div class="b"><div class="k">目標アトム量</div><div class="v" id="stReq">—</div></div>
+      <div class="b"><div class="k" data-i18n="stTgtK">目標地点の実効レート</div><div class="v" id="stTgt">—</div></div>
+      <div class="b"><div class="k" data-i18n="stBK">基準倍率 B（ペナルティ無し）</div><div class="v" id="stB">—</div></div>
+      <div class="b"><div class="k" data-i18n="stDeltaK">伸ばす桁数 (log₁₀)</div><div class="v" id="stDelta">—</div></div>
+      <div class="b"><div class="k" data-i18n="stReqK">目標アトム量</div><div class="v" id="stReq">—</div></div>
     </div>
   </div>
 
   <div class="card">
-    <h2><span class="n">5</span>ペナルティ区間ごとの内訳</h2>
+    <h2><span class="n">5</span><span data-i18n="c5">ペナルティ区間ごとの内訳</span></h2>
     <div class="seg" id="rateSeg">
-      <button data-rate="std" class="on">標準表記</button>
-      <button data-rate="exp">指数表記</button>
+      <button data-rate="std" class="on" data-i18n="rateStd">標準表記</button>
+      <button data-rate="exp" data-i18n="rateExp">指数表記</button>
     </div>
     <div class="scroll">
       <table id="segTable">
-        <thead><tr><th>区間 (アトム)</th><th title="この区間の開始時に発動する効果(バフ/ペナルティ)">効果</th><th>累積指数 E</th><th>実効 ×/秒</th><th title="この区間で伸びるアトムの桁幅(log₁₀)">桁幅</th><th>所要時間</th></tr></thead>
+        <thead><tr>
+          <th data-i18n="thRange">区間 (アトム)</th>
+          <th data-i18n="thEff" data-i18n-title="thEffT">効果</th>
+          <th data-i18n="thE">累積指数 E</th>
+          <th data-i18n="thRate">実効 ×/秒</th>
+          <th data-i18n="thDig" data-i18n-title="thDigT">桁幅</th>
+          <th data-i18n="thTime">所要時間</th>
+        </tr></thead>
         <tbody></tbody>
       </table>
     </div>
-    <p class="foot">アトム量が閾値を超えるたびに「原子獲得量」が累乗され、実効レートが下がります。軽減設定を有効にすると該当区間のペナルティが緩みます。</p>
-    <button class="btn" id="copyBtn">設定と結果をコピー</button>
+    <p class="foot" data-i18n="segFoot"></p>
+    <button class="btn" id="copyBtn" data-i18n="copyBtn">設定と結果をコピー</button>
   </div>
 
   <div class="card">
-    <h2><span class="n">i</span>計算モデルと前提</h2>
-    <p class="foot" style="line-height:1.75">
-      アトムは毎秒 <code style="all:unset;color:var(--acc2)">a</code> 倍で増えるため、到達秒数は
-      <code style="all:unset;color:var(--acc2)">t = log₁₀(目標/現在) ÷ log₁₀(a)</code>。<br>
-      ペナルティ未発動時の基準倍率を <code style="all:unset;color:var(--acc2)">B = 特異点倍率</code> とし、各ペナルティ区間の実効レートを <code style="all:unset;color:var(--acc2)">a = B^E</code>（E＝その区間で有効な指数の積）として区間ごとに時間を積算します。<br>
-      <span class="pill">前提</span> 特異点倍率・元素等のベース獲得量は周回中一定。サクリファイスダスト・拡散力系の強化は未反映。必要アトム量は wiki の区間式に基づく近似値。
-    </p>
-    <p class="foot">出典: <a href="https://wikiwiki.jp/revoidle/Singularity" target="_blank" rel="noopener">特異点</a> / <a href="https://wikiwiki.jp/revoidle/Minerals/%E4%B8%80%E8%A6%A7" target="_blank" rel="noopener">精錬ノード一覧</a></p>
+    <h2><span class="n">i</span><span data-i18n="ci">計算モデルと前提</span></h2>
+    <p class="foot" style="line-height:1.75" data-i18n-html="modelP"></p>
+    <p class="foot" data-i18n-html="srcP"></p>
   </div>
 </div>
 
 <script>
 (function(){
   "use strict";
-  // ---- 原子獲得量に累乗される閾値（log10, 指数）。軽減設定を反映して指数を返す ----
+  var STORE="revoidle-sing-calc-v2";
+  function detectLang(){
+    try{ var raw=localStorage.getItem(STORE); if(raw){ var o=JSON.parse(raw); if(o.lang==="ja"||o.lang==="en") return o.lang; } }catch(e){}
+    return (navigator.language||navigator.userLanguage||"").toLowerCase().indexOf("ja")===0 ? "ja":"en";
+  }
+  var LANG=detectLang();
+
+  var T={
+    ja:{
+      docTitle:"特異点 到達時間計算機 | Revolution Idle",
+      h1a:"特異点", h1b:" 到達時間計算機",
+      headerP:"Revolution Idle ─ アトムのペナルティと精錬軽減を考慮した「実際にかかる時間」を計算します",
+      c1:"基本",
+      singMultL:"特異点倍率",
+      singMultH:'特異点タブの倍率。例: <code style="all:unset">100</code> / <code style="all:unset">1e4</code>',
+      curAtomL:"現在のアトム量",
+      curAtomH:'既定 <code style="all:unset">1</code>（周回開始）。途中から計算したい時のみ変更',
+      localSpeedL:"ローカル速度",
+      localSpeedH:'特異点タブのローカル速度。2なら時間が2倍速で進む（所要時間が半分）。例 <code style="all:unset">1440</code>',
+      c2:"目標",
+      modeSing:"特異点の回数で指定", modeAtom:"アトム量で指定",
+      singSelL:"目標の特異点回数",
+      tgtAtomL:"目標アトム量",
+      tgtAtomH:'「特異点の回数で指定」で選んだ値を引き継ぎます。自由入力も可（例 <code style="all:unset">1e696</code>）',
+      c3:"ペナルティ軽減設定",
+      rn126:'RN126：<b>1e50</b> ペナルティを無効化<small>原子獲得量 ^0.833 → 無効</small>',
+      rn127:'RN127：<b>1.4e154</b> ペナルティを無効化<small>原子獲得量 ^0.847 → 無効</small>',
+      rn128:'RN128：<b>1e10</b> ペナルティ弱化<small>指数 = 0.5 + 0.05×Lv（Lv10で無効）</small>',
+      tree31:'ツリー3.1：<b>1.8e308</b> ペナルティ弱化<small>ツリー表記の値 x（1〜約1.2）。実効指数 = 0.12 / (2 − x)</small>',
+      tree32:'ツリー3.2：<b>1e500</b> ペナルティ弱化<small>ツリー表記の値 x（1〜約1.2）。実効指数 = 0.05 / (2 − x)</small>',
+      tree62:'ツリー6.2：<b>1e1000</b> ペナルティ弱化<small>ツリー表記の値 x（1〜約1.2）。実効指数 = 0.033 / (2 − x)</small>',
+      c4:"バフ（強化）",
+      virusL:'進行7 ウィルスの昇華<small>達成で 原子獲得量^1.02、未達成は ^0.02（重ペナルティ）</small>',
+      singCntL:'特異点回数アトム倍率<small>アトム量1から常時 原子獲得量^この値（既定1＝効果なし）</small>',
+      relic69L:'遺物69<small>1e6以上で 原子獲得量^この値（1〜2程度、既定1）</small>',
+      resLbl:"到達までの推定時間",
+      applyLS:"ローカル速度を反映",
+      stTgtK:"目標地点の実効レート", stBK:"基準倍率 B（ペナルティ無し）", stDeltaK:"伸ばす桁数 (log₁₀)", stReqK:"目標アトム量",
+      c5:"ペナルティ区間ごとの内訳",
+      rateStd:"標準表記", rateExp:"指数表記",
+      thRange:"区間 (アトム)", thEff:"効果", thE:"累積指数 E", thRate:"実効 ×/秒", thDig:"桁幅", thTime:"所要時間",
+      thEffT:"この区間の開始時に発動する効果(バフ/ペナルティ)", thDigT:"この区間で伸びるアトムの桁幅(log₁₀)",
+      segFoot:"アトム量が閾値を超えるたびに「原子獲得量」が累乗され、実効レートが下がります。軽減設定を有効にすると該当区間のペナルティが緩みます。",
+      copyBtn:"設定と結果をコピー", copied:"コピーしました ✓",
+      ci:"計算モデルと前提",
+      modelP:'アトムは毎秒 <code style="all:unset;color:var(--acc2)">a</code> 倍で増えるため、到達秒数は <code style="all:unset;color:var(--acc2)">t = log₁₀(目標/現在) ÷ log₁₀(a)</code>。<br>ペナルティ未発動時の基準倍率を <code style="all:unset;color:var(--acc2)">B = 特異点倍率</code> とし、各ペナルティ区間の実効レートを <code style="all:unset;color:var(--acc2)">a = B^E</code>（E＝その区間で有効な指数の積）として区間ごとに時間を積算します。<br><span class="pill">前提</span> 特異点倍率・元素等のベース獲得量は周回中一定。サクリファイスダスト・拡散力系の強化は未反映。必要アトム量は wiki の区間式に基づく近似値。',
+      srcP:'出典: <a href="https://wikiwiki.jp/revoidle/Singularity" target="_blank" rel="noopener">特異点</a> / <a href="https://wikiwiki.jp/revoidle/Minerals/%E4%B8%80%E8%A6%A7" target="_blank" rel="noopener">精錬ノード一覧</a>',
+      reqAtoms:"必要アトム量 ≈ ",
+      errCur:"現在のアトム量の形式が不正です（例: 1 または 1.8e308）",
+      errTgt:"目標アトム量の形式が不正です（例: 1e696）",
+      errMult:"特異点倍率の形式が不正です（例: 100 または 1e4）",
+      needMult:"特異点倍率を 1 より大きくすると計算されます。",
+      reachedMsg:"目標アトム量に既に到達しています（所要時間 0）。",
+      reached:"到達済み",
+      start:"開始", plus:" ＋ ", digits:" 桁", secLabel:" 秒", lsNote:"（ローカル速度 ×%1 反映）",
+      rateLE1:"×1 以下",
+      tagSingcnt:"特異点回数倍率", tagVirus:"ウィルスの昇華", tagRelic:"遺物69",
+      tagT31:"ツリー3.1", tagT32:"ツリー3.2", tagT62:"ツリー6.2",
+      singOne:"特異点 1〜10", singPre:"特異点 ", op:"　（", cp:"）"
+    },
+    en:{
+      docTitle:"Singularity Time Calculator | Revolution Idle",
+      h1a:"Singularity", h1b:" Time Calculator",
+      headerP:"Revolution Idle — estimate the real time to reach a Singularity, accounting for atom penalties and refine mitigations.",
+      c1:"Basics",
+      singMultL:"Singularity multiplier",
+      singMultH:'The multiplier on the Singularity tab. e.g. <code style="all:unset">100</code> / <code style="all:unset">1e4</code>',
+      curAtomL:"Current atoms",
+      curAtomH:'Default <code style="all:unset">1</code> (run start). Change only to start mid-run.',
+      localSpeedL:"Local speed",
+      localSpeedH:'Local speed on the Singularity tab. 2 = time runs 2× faster (half the wait). e.g. <code style="all:unset">1440</code>',
+      c2:"Target",
+      modeSing:"By singularity count", modeAtom:"By atom amount",
+      singSelL:"Target singularity count",
+      tgtAtomL:"Target atoms",
+      tgtAtomH:'Inherits the value picked in "By singularity count". Free input allowed (e.g. <code style="all:unset">1e696</code>).',
+      c3:"Penalty mitigations",
+      rn126:'RN126: nullify the <b>1e50</b> penalty<small>atom gain ^0.833 → off</small>',
+      rn127:'RN127: nullify the <b>1.4e154</b> penalty<small>atom gain ^0.847 → off</small>',
+      rn128:'RN128: weaken the <b>1e10</b> penalty<small>exp = 0.5 + 0.05×Lv (off at Lv10)</small>',
+      tree31:'Tree 3.1: weaken <b>1.8e308</b><small>tree "/x" value (1–~1.2). Eff. exp = 0.12 / (2 − x)</small>',
+      tree32:'Tree 3.2: weaken <b>1e500</b><small>tree "/x" value (1–~1.2). Eff. exp = 0.05 / (2 − x)</small>',
+      tree62:'Tree 6.2: weaken <b>1e1000</b><small>tree "/x" value (1–~1.2). Eff. exp = 0.033 / (2 − x)</small>',
+      c4:"Buffs",
+      virusL:'Prog. 7 Viral Sublimation<small>done: atom gain ^1.02; not done: ^0.02 (heavy penalty)</small>',
+      singCntL:'Singularity-count atom mult<small>always from atom 1: atom gain ^this (default 1 = no effect)</small>',
+      relic69L:'Relic 69<small>above 1e6: atom gain ^this (~1–2, default 1)</small>',
+      resLbl:"Estimated time to reach",
+      applyLS:"Apply local speed",
+      stTgtK:"Effective rate at target", stBK:"Base multiplier B (no penalty)", stDeltaK:"Digits to grow (log₁₀)", stReqK:"Target atoms",
+      c5:"Per-segment breakdown",
+      rateStd:"Standard", rateExp:"Exponent",
+      thRange:"Range (atoms)", thEff:"Effect", thE:"Cumul. exp E", thRate:"Eff. ×/sec", thDig:"Digits", thTime:"Time",
+      thEffT:"Effect (buff/penalty) that activates at the start of this segment", thDigT:"Atom digit-width grown in this segment (log₁₀)",
+      segFoot:"Each time atoms cross a threshold, atom gain is raised to a power and the effective rate drops. Enabling a mitigation eases that segment's penalty.",
+      copyBtn:"Copy settings & result", copied:"Copied ✓",
+      ci:"Model & assumptions",
+      modelP:'Atoms grow ×<code style="all:unset;color:var(--acc2)">a</code> per second, so time = <code style="all:unset;color:var(--acc2)">t = log₁₀(target/current) ÷ log₁₀(a)</code>.<br>The pre-penalty base is <code style="all:unset;color:var(--acc2)">B = singularity multiplier</code>; each penalty segment uses effective rate <code style="all:unset;color:var(--acc2)">a = B^E</code> (E = product of active exponents), and times are summed per segment.<br><span class="pill">Assumes</span> base gain (mult, elements, …) constant per run. Sacrifice-dust / spread buffs not modeled. Required atoms are approximated from the wiki piecewise formulas.',
+      srcP:'Source: <a href="https://wikiwiki.jp/revoidle/Singularity" target="_blank" rel="noopener">Singularity</a> / <a href="https://wikiwiki.jp/revoidle/Minerals/%E4%B8%80%E8%A6%A7" target="_blank" rel="noopener">Refine nodes</a>',
+      reqAtoms:"Required atoms ≈ ",
+      errCur:"Invalid current-atoms format (e.g. 1 or 1.8e308)",
+      errTgt:"Invalid target-atoms format (e.g. 1e696)",
+      errMult:"Invalid singularity multiplier (e.g. 100 or 1e4)",
+      needMult:"Enter a singularity multiplier greater than 1 to compute.",
+      reachedMsg:"Target atoms already reached (0 time).",
+      reached:"Reached",
+      start:"start", plus:" + ", digits:" digits", secLabel:" s", lsNote:" (local speed ×%1 applied)",
+      rateLE1:"×≤1",
+      tagSingcnt:"Sing.count mult", tagVirus:"Viral Sublim.", tagRelic:"Relic 69",
+      tagT31:"Tree 3.1", tagT32:"Tree 3.2", tagT62:"Tree 6.2",
+      singOne:"Singularity 1–10", singPre:"Singularity ", op:" (", cp:")"
+    }
+  };
+  function t(k){ var d=T[LANG]; return (d&&d[k]!=null)?d[k]:(T.ja[k]!=null?T.ja[k]:k); }
+
+  // ---- 原子獲得量に累乗される閾値 ----
   function thresholds(s){
-    var rn128 = Math.min(1.0, 0.5 + 0.05*(s.rn128||0));   // 1e10: Lv10で1.0(無効)
+    var rn128 = Math.min(1.0, 0.5 + 0.05*(s.rn128||0));
     return [
-      {log:0,       e:s.singCnt, kind:"buf", tag:"特異点回数倍率"},     // アトム1から常時
-      {log:0,       e:s.virus,   kind:"buf", tag:"ウィルスの昇華"},     // アトム1から常時
-      {log:6,       e:s.relic69, kind:"buf", tag:"遺物69"},            // 1e6 強化
+      {log:0,       e:s.singCnt, kind:"buf", tag:t("tagSingcnt")},
+      {log:0,       e:s.virus,   kind:"buf", tag:t("tagVirus")},
+      {log:6,       e:s.relic69, kind:"buf", tag:t("tagRelic")},
       {log:10,      e:rn128,     kind:"pen", tag:"RN128"},
       {log:50,      e:s.rn126?1:0.833, kind:"pen", tag:"RN126"},
       {log:154.146, e:s.rn127?1:0.847, kind:"pen", tag:"RN127"},
       {log:256.204, e:0.714,     kind:"pen", tag:""},
-      {log:308.255, e:s.tree31,  kind:"pen", tag:"ツリー3.1"},
-      {log:500,     e:s.tree32,  kind:"pen", tag:"ツリー3.2"},
-      {log:1000,    e:s.tree62,  kind:"pen", tag:"ツリー6.2"},
+      {log:308.255, e:s.tree31,  kind:"pen", tag:t("tagT31")},
+      {log:500,     e:s.tree32,  kind:"pen", tag:t("tagT32")},
+      {log:1000,    e:s.tree62,  kind:"pen", tag:t("tagT62")},
       {log:2000,    e:0.5,       kind:"pen", tag:""},
       {log:3000,    e:0.333,     kind:"pen", tag:""},
       {log:5000,    e:0.2,       kind:"pen", tag:""},
@@ -274,28 +392,27 @@
     return mant.toFixed(2)+"e"+exp;
   }
   var rateMode="std";
-  // ゲーム表示に合わせた倍率表記（×1.0130 / ×2,540,000 / e9以上は ×2.54e9）
   function fmtRate(logA){
-    if(logA<=0) return "×1 以下";
+    if(logA<=0) return t("rateLE1");
     if(rateMode==="exp") return "×10^"+logA.toFixed(3);
     if(logA<9){ var a=Math.pow(10,logA); return "×"+a.toLocaleString("en-US",{maximumFractionDigits: a<10?4:(a<1000?2:0)}); }
     return "×"+fmtLog(logA);
   }
   function fmtTime(s){
     if(!isFinite(s)) return "∞";
-    if(s<=0) return "0秒";
-    if(s<1) return "1秒未満";
     var Y=31557600;
-    if(s>Y*1000){ return (s/Y).toExponential(2)+" 年"; }
-    var u=[["年",Y],["日",86400],["時間",3600],["分",60],["秒",1]];
+    var U = LANG==="ja" ? [["年",Y],["日",86400],["時間",3600],["分",60],["秒",1]]
+                        : [["y",Y],["d",86400],["h",3600],["m",60],["s",1]];
+    if(s<=0) return LANG==="ja"?"0秒":"0s";
+    if(s<1) return LANG==="ja"?"1秒未満":"<1s";
+    if(s>Y*1000) return (s/Y).toExponential(2)+(LANG==="ja"?" 年":" y");
     var parts=[],rem=s;
-    for(var i=0;i<u.length;i++){
-      if(rem>=u[i][1]){ var v=Math.floor(rem/u[i][1]); rem-=v*u[i][1]; parts.push(v+u[i][0]); }
+    for(var i=0;i<U.length;i++){
+      if(rem>=U[i][1]){ var v=Math.floor(rem/U[i][1]); rem-=v*U[i][1]; parts.push(v+U[i][0]); }
       if(parts.length>=2) break;
     }
-    return parts.length?parts.join(" "):"1秒未満";
+    return parts.length?parts.join(" "):(LANG==="ja"?"1秒未満":"<1s");
   }
-  // 特異点N に到達するための必要アトム量(log10)。wikiは1つ前の回数基準の式。
   function reqLog10(N){
     if(N<=10) return 308.2553;
     if(N<=21) return 20*(N-1)+120;
@@ -310,17 +427,26 @@
       rn126=$("rn126"), rn127=$("rn127"), rn128=$("rn128"), rn128chk=$("rn128chk"),
       tree31=$("tree31"), tree32=$("tree32"), tree62=$("tree62"),
       singSel=$("singSel"), singReq=$("singReq"), tgtAtom=$("tgtAtom"),
-      singBox=$("singBox"), atomBox=$("atomBox");
+      singBox=$("singBox"), atomBox=$("atomBox"), copyBtn=$("copyBtn");
   var mode="sing";
 
-  (function(){
-    // 特異点1〜10は同一(1.80e308)なので1項目に統合
-    var html='<option value="10" selected>特異点 1〜10　（'+fmtLog(reqLog10(10))+'）</option>';
-    for(var N=11;N<=100;N++){
-      html+='<option value="'+N+'">特異点 '+N+'　（'+fmtLog(reqLog10(N))+'）</option>';
-    }
-    singSel.innerHTML=html;
-  })();
+  function genSelect(){
+    var cur=singSel.value||"10";
+    var html='<option value="10">'+t("singOne")+t("op")+fmtLog(reqLog10(10))+t("cp")+'</option>';
+    for(var N=11;N<=100;N++){ html+='<option value="'+N+'">'+t("singPre")+N+t("op")+fmtLog(reqLog10(N))+t("cp")+'</option>'; }
+    singSel.innerHTML=html; singSel.value=cur;
+  }
+  function applyI18n(){
+    try{ document.title=t("docTitle"); document.documentElement.lang=LANG; }catch(e){}
+    document.querySelectorAll("[data-i18n]").forEach(function(el){ el.textContent=t(el.getAttribute("data-i18n")); });
+    document.querySelectorAll("[data-i18n-html]").forEach(function(el){ el.innerHTML=t(el.getAttribute("data-i18n-html")); });
+    document.querySelectorAll("[data-i18n-title]").forEach(function(el){ el.title=t(el.getAttribute("data-i18n-title")); });
+    document.querySelectorAll(".langsw button").forEach(function(b){ b.classList.toggle("on", b.dataset.lang===LANG); });
+  }
+
+  document.querySelectorAll(".langsw button").forEach(function(b){
+    b.addEventListener("click",function(){ LANG=b.dataset.lang; save(); applyI18n(); genSelect(); calc(); });
+  });
 
   document.querySelectorAll("#modeSeg button").forEach(function(b){
     b.addEventListener("click",function(){
@@ -328,7 +454,6 @@
       b.classList.add("on"); mode=b.dataset.mode;
       singBox.style.display = mode==="sing"?"":"none";
       atomBox.style.display = mode==="atom"?"":"none";
-      // 「アトム量で指定」に切替時、ドロップダウンで選択中の必要アトム量を引き継ぐ
       if(mode==="atom"){ tgtAtom.value = fmtLog(reqLog10(parseInt(singSel.value,10))); }
       update();
     });
@@ -338,8 +463,6 @@
     var r69=parseFloat(relic69.value); if(!isFinite(r69)||r69<0) r69=1.0;
     var sc=parseFloat(singCnt.value); if(!isFinite(sc)||sc<0) sc=1.0;
     var vir = virus.checked ? 1.02 : 0.02;
-    // ツリー表記 /x（初期1、1〜約1.2）。実効ペナルティ指数 = base / (2 − x)（上限1）
-    // 実測2点(x1.1516→0.141, x1.1549→0.142)が base=0.12・定数2でぴったり一致
     function treeExp(base,x){ if(!isFinite(x)||x<1) x=1; var d=2-x; return d<=0?1:Math.min(1, base/d); }
     var t31=treeExp(0.12,  parseFloat(tree31.value));
     var t32=treeExp(0.05,  parseFloat(tree32.value));
@@ -366,24 +489,22 @@
     var x1=targetLog();
     var logM=parseLog10(singMult.value);
 
-    if(mode==="sing"){ singReq.textContent="必要アトム量 ≈ "+fmtLog(x1); }
+    if(mode==="sing"){ singReq.textContent=t("reqAtoms")+fmtLog(x1); }
 
-    if(x0==null){ msg("bad","現在のアトム量の形式が不正です（例: 1 または 1.8e308）"); clearOut(); return; }
-    if(x1==null){ msg("bad","目標アトム量の形式が不正です（例: 1e696）"); clearOut(); return; }
-    if(logM==null){ msg("bad","特異点倍率の形式が不正です（例: 100 または 1e4）"); clearOut(); return; }
+    if(x0==null){ msg("bad",t("errCur")); clearOut(); return; }
+    if(x1==null){ msg("bad",t("errTgt")); clearOut(); return; }
+    if(logM==null){ msg("bad",t("errMult")); clearOut(); return; }
 
-    // ペナルティ未発動時の毎秒倍率 B = 特異点倍率
     var logB=logM;
-    if(logB<=0){ msg("info","特異点倍率を 1 より大きくすると計算されます。"); clearOut(); return; }
+    if(logB<=0){ msg("info",t("needMult")); clearOut(); return; }
 
-    // ローカル速度: 速度sf倍で実時間が1/sfに
     var lsVal=parseFloat(localSpeed.value); if(!isFinite(lsVal)||lsVal<=0) lsVal=1;
     var sf = localSpeedOn.checked ? lsVal : 1;
 
     $("stReq").textContent=fmtLog(x1);
-    if(x1<=x0){ msg("ok","目標アトム量に既に到達しています（所要時間 0）。");
-      $("timeBig").textContent="到達済み"; $("timeSub").textContent="";
-      $("stTgt").textContent="—"; $("stB").textContent=fmtRate(logB); $("stDelta").textContent="0 桁";
+    if(x1<=x0){ msg("ok",t("reachedMsg"));
+      $("timeBig").textContent=t("reached"); $("timeSub").textContent="";
+      $("stTgt").textContent="—"; $("stB").textContent=fmtRate(logB); $("stDelta").textContent="0"+t("digits");
       $("segTable").querySelector("tbody").innerHTML=""; return;
     }
     msg("","");
@@ -398,12 +519,11 @@
       var Eseg=Eat(mid,ths);
       var logAseg=Eseg*logB;
       var span=hi-lo;
-      var t = logAseg>0 ? span/logAseg : Infinity;
-      total+=t;
-      var td = t/sf;
-      // この区間の開始(lo)で発動する効果（複数可：アトム1では常時バフが並ぶ）
+      var tt = logAseg>0 ? span/logAseg : Infinity;
+      total+=tt;
+      var td = tt/sf;
       var here=[]; for(var j=0;j<ths.length;j++){ if(Math.abs(ths[j].log-lo)<1e-6) here.push(ths[j]); }
-      var eff = here.map(function(x){ var v=(+x.e.toFixed(4)); return (x.tag?x.tag+" ":"")+"^"+v; }).join(" ＋ ") || (k===0?"開始":"");
+      var eff = here.map(function(x){ var v=(+x.e.toFixed(4)); return (x.tag?x.tag+" ":"")+"^"+v; }).join(t("plus")) || (k===0?t("start"):"");
       var isOff = here.length>0 && here.every(function(x){return x.e===1;});
       var isPen = here.some(function(x){return x.kind==="pen" && x.e!==1;});
       var isBuf = here.some(function(x){return x.kind==="buf" && x.e!==1;});
@@ -417,18 +537,16 @@
     }
 
     $("timeBig").textContent=fmtTime(total/sf);
-    $("timeSub").textContent="= "+Math.round(total/sf).toLocaleString()+" 秒"+(sf!==1?"（ローカル速度 ×"+lsVal+" 反映）":"");
+    $("timeSub").textContent="= "+Math.round(total/sf).toLocaleString("en-US")+t("secLabel")+(sf!==1?t("lsNote").replace("%1",lsVal):"");
     $("stTgt").textContent=fmtRate(Eat(x1,ths)*logB);
     $("stB").textContent=fmtRate(logB);
-    $("stDelta").textContent=(x1-x0).toFixed(1)+" 桁";
+    $("stDelta").textContent=(x1-x0).toFixed(1)+t("digits");
     $("segTable").querySelector("tbody").innerHTML=rows;
   }
 
-  // RN128 の MAX チェック（=Lv10）と数値の同期
   rn128chk.addEventListener("change",function(){ rn128.value = rn128chk.checked?10:0; update(); });
   rn128.addEventListener("input",function(){ rn128chk.checked = (parseInt(rn128.value,10)===10); });
 
-  // 区間の倍率表記トグル（標準／指数）
   document.querySelectorAll("#rateSeg button").forEach(function(b){
     b.addEventListener("click",function(){
       document.querySelectorAll("#rateSeg button").forEach(function(x){x.classList.remove("on");});
@@ -436,13 +554,11 @@
     });
   });
 
-  // ---- 設定値の保存/復元 ----
-  var STORE="revoidle-sing-calc-v2";
   var FIELDS=["singMult","curAtom","localSpeed","relic69","singCnt","rn128","tree31","tree32","tree62","tgtAtom","singSel"];
   var CHECKS=["virus","localSpeedOn","rn126","rn127","rn128chk"];
   function save(){
     try{
-      var o={mode:mode, rateMode:rateMode};
+      var o={mode:mode, rateMode:rateMode, lang:LANG};
       FIELDS.forEach(function(id){ o[id]=$(id).value; });
       CHECKS.forEach(function(id){ o[id]=$(id).checked; });
       localStorage.setItem(STORE,JSON.stringify(o));
@@ -467,32 +583,28 @@
   }
   function update(){ calc(); save(); }
 
-  // ---- デバッグ用: 設定と結果をコピー ----
   function buildDebug(){
-    var s=settings();
-    var L=[];
-    L.push("[特異点 到達時間計算機 デバッグ]");
-    L.push("特異点倍率="+singMult.value+"  現在アトム="+curAtom.value+"  ローカル速度="+localSpeed.value+(localSpeedOn.checked?"(反映)":"(無視)"));
-    L.push("バフ: 特異点回数アトム倍率="+singCnt.value+"  遺物69="+relic69.value+"  ウィルスの昇華="+(virus.checked?"達成1.02":"未達成0.02"));
-    L.push("軽減: RN126="+(rn126.checked?"ON":"OFF")+"  RN127="+(rn127.checked?"ON":"OFF")+"  RN128=Lv"+rn128.value
-         +"  ツリー3.1 x="+tree31.value+"(実効"+s.tree31.toFixed(4)+")"
-         +"  3.2 x="+tree32.value+"(実効"+s.tree32.toFixed(4)+")"
-         +"  6.2 x="+tree62.value+"(実効"+s.tree62.toFixed(4)+")");
-    L.push("目標: "+(mode==="sing"?("特異点 "+singSel.value):("アトム "+tgtAtom.value))+"  必要="+$("stReq").textContent);
-    L.push("倍率表記="+rateMode);
-    L.push("--- 結果 ---");
-    L.push("総時間="+$("timeBig").textContent+"  ("+$("timeSub").textContent+")");
-    L.push("基準倍率B="+$("stB").textContent+"  目標地点の実効="+$("stTgt").textContent+"  伸ばす桁="+$("stDelta").textContent);
-    L.push("--- 区間内訳 (区間 | E | 実効/秒 | 桁幅 | 時間) ---");
+    var s=settings(), ja=(LANG==="ja"), L=[];
+    L.push(ja?"[特異点 到達時間計算機 デバッグ]":"[Singularity Time Calculator debug]");
+    L.push((ja?"特異点倍率=":"SingMult=")+singMult.value+(ja?"  現在アトム=":"  curAtom=")+curAtom.value+(ja?"  ローカル速度=":"  localSpeed=")+localSpeed.value+(localSpeedOn.checked?(ja?"(反映)":"(on)"):(ja?"(無視)":"(off)")));
+    L.push((ja?"バフ: 特異点回数=":"Buffs: singCount=")+singCnt.value+(ja?"  遺物69=":"  relic69=")+relic69.value+(ja?"  ウィルスの昇華=":"  virus=")+(virus.checked?"1.02":"0.02"));
+    L.push((ja?"軽減: ":"Mit: ")+"RN126="+(rn126.checked?"ON":"OFF")+"  RN127="+(rn127.checked?"ON":"OFF")+"  RN128=Lv"+rn128.value
+         +"  "+t("tagT31")+" x="+tree31.value+"(->"+s.tree31.toFixed(4)+")"
+         +"  "+t("tagT32")+" x="+tree32.value+"(->"+s.tree32.toFixed(4)+")"
+         +"  "+t("tagT62")+" x="+tree62.value+"(->"+s.tree62.toFixed(4)+")");
+    L.push((ja?"目標: ":"Target: ")+(mode==="sing"?(t("singPre")+singSel.value):("atoms "+tgtAtom.value))+(ja?"  必要=":"  req=")+$("stReq").textContent);
+    L.push("--- "+(ja?"結果":"result")+" ---");
+    L.push((ja?"総時間=":"time=")+$("timeBig").textContent+"  ("+$("timeSub").textContent+")");
+    L.push("B="+$("stB").textContent+"  "+t("stTgtK")+"="+$("stTgt").textContent+"  "+t("stDeltaK")+"="+$("stDelta").textContent);
+    L.push("--- "+(ja?"区間内訳":"segments")+" ---");
     Array.prototype.forEach.call(document.querySelectorAll("#segTable tbody tr"),function(r){
       L.push(Array.prototype.map.call(r.children,function(c){return c.textContent;}).join(" | "));
     });
     return L.join("\n");
   }
-  var copyBtn=$("copyBtn"), COPYLABEL=copyBtn.textContent;
   copyBtn.addEventListener("click",function(){
     var txt=buildDebug();
-    function done(){ copyBtn.textContent="コピーしました ✓"; setTimeout(function(){ copyBtn.textContent=COPYLABEL; },1500); }
+    function done(){ copyBtn.textContent=t("copied"); setTimeout(function(){ copyBtn.textContent=t("copyBtn"); },1500); }
     function fallback(){
       var ta=document.createElement("textarea"); ta.value=txt;
       ta.style.position="fixed"; ta.style.opacity="0"; document.body.appendChild(ta); ta.select();
@@ -505,7 +617,11 @@
   [singMult,curAtom,localSpeed,localSpeedOn,relic69,singCnt,virus,rn126,rn127,rn128,tree31,tree32,tree62,singSel,tgtAtom].forEach(function(el){
     el.addEventListener("input",update); el.addEventListener("change",update);
   });
+
+  genSelect();
   load();
+  applyI18n();
+  genSelect();
   calc();
 })();
 </script>
