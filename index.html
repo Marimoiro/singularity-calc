@@ -102,15 +102,10 @@
         <p class="hint">特異点タブの倍率。例: <code style="all:unset">100</code> / <code style="all:unset">1e4</code></p>
       </div>
       <div class="field">
-        <label>基準倍率</label>
-        <input id="baseRate" type="text" value="1" inputmode="text" />
-        <p class="hint">特異点倍率以外の毎秒獲得倍率。既定 <code style="all:unset">1</code>。実際の×/秒に合わせて調整</p>
+        <label>現在のアトム量</label>
+        <input id="curAtom" type="text" value="1" inputmode="text" />
+        <p class="hint">既定 <code style="all:unset">1</code>（周回開始）。途中から計算したい時のみ変更</p>
       </div>
-    </div>
-    <div class="field" style="margin-top:14px">
-      <label>現在のアトム量</label>
-      <input id="curAtom" type="text" value="1" inputmode="text" />
-      <p class="hint">既定 <code style="all:unset">1</code>（周回開始）。途中から計算したい時のみ変更</p>
     </div>
   </div>
 
@@ -201,7 +196,7 @@
     <p class="foot" style="line-height:1.75">
       アトムは毎秒 <code style="all:unset;color:var(--acc2)">a</code> 倍で増えるため、到達秒数は
       <code style="all:unset;color:var(--acc2)">t = log₁₀(目標/現在) ÷ log₁₀(a)</code>。<br>
-      ペナルティ未発動時の基準倍率を <code style="all:unset;color:var(--acc2)">B = 特異点倍率 × 基準倍率</code> とし、各ペナルティ区間の実効レートを <code style="all:unset;color:var(--acc2)">a = B^E</code>（E＝その区間で有効な指数の積）として区間ごとに時間を積算します。実効×/秒が実際のゲーム表示と合わない場合は<b>基準倍率</b>で微調整してください。<br>
+      ペナルティ未発動時の基準倍率を <code style="all:unset;color:var(--acc2)">B = 特異点倍率</code> とし、各ペナルティ区間の実効レートを <code style="all:unset;color:var(--acc2)">a = B^E</code>（E＝その区間で有効な指数の積）として区間ごとに時間を積算します。<br>
       <span class="pill">前提</span> 特異点倍率・元素等のベース獲得量は周回中一定。サクリファイスダスト・拡散力系の強化は未反映。必要アトム量は wiki の区間式に基づく近似値。
     </p>
     <p class="foot">出典: <a href="https://wikiwiki.jp/revoidle/Singularity" target="_blank" rel="noopener">特異点</a> / <a href="https://wikiwiki.jp/revoidle/Minerals/%E4%B8%80%E8%A6%A7" target="_blank" rel="noopener">精錬ノード一覧</a></p>
@@ -277,7 +272,7 @@
   }
 
   var $=function(id){return document.getElementById(id);};
-  var singMult=$("singMult"), baseRate=$("baseRate"), curAtom=$("curAtom"), relic69=$("relic69"),
+  var singMult=$("singMult"), curAtom=$("curAtom"), relic69=$("relic69"),
       rn126=$("rn126"), rn127=$("rn127"), rn128=$("rn128"),
       tree31=$("tree31"), tree32=$("tree32"), tree62=$("tree62"),
       singSel=$("singSel"), singReq=$("singReq"), tgtAtom=$("tgtAtom"),
@@ -328,18 +323,16 @@
     var x0=parseLog10(curAtom.value);
     var x1=targetLog();
     var logM=parseLog10(singMult.value);
-    var logC=parseLog10(baseRate.value);
 
     if(mode==="sing"){ singReq.textContent="必要アトム量 ≈ "+fmtLog(x1); }
 
     if(x0==null){ msg("bad","現在のアトム量の形式が不正です（例: 1 または 1.8e308）"); clearOut(); return; }
     if(x1==null){ msg("bad","目標アトム量の形式が不正です（例: 1e696）"); clearOut(); return; }
     if(logM==null){ msg("bad","特異点倍率の形式が不正です（例: 100 または 1e4）"); clearOut(); return; }
-    if(logC==null){ msg("bad","基準倍率の形式が不正です（例: 1）"); clearOut(); return; }
 
-    // 基準倍率(ペナルティ未発動時の毎秒倍率) = 特異点倍率 × 基準倍率
-    var logB=logM+logC;
-    if(logB<=0){ msg("bad","特異点倍率 × 基準倍率 が ×1 以下ではアトムが増えません。"); clearOut(); return; }
+    // ペナルティ未発動時の毎秒倍率 B = 特異点倍率
+    var logB=logM;
+    if(logB<=0){ msg("bad","特異点倍率が ×1 以下ではアトムが増えません。"); clearOut(); return; }
 
     $("stReq").textContent=fmtLog(x1);
     if(x1<=x0){ msg("ok","目標アトム量に既に到達しています（所要時間 0）。");
@@ -378,7 +371,7 @@
     $("segTable").querySelector("tbody").innerHTML=rows;
   }
 
-  [singMult,baseRate,curAtom,relic69,rn126,rn127,rn128,tree31,tree32,tree62,singSel,tgtAtom].forEach(function(el){
+  [singMult,curAtom,relic69,rn126,rn127,rn128,tree31,tree32,tree62,singSel,tgtAtom].forEach(function(el){
     el.addEventListener("input",calc); el.addEventListener("change",calc);
   });
   calc();
