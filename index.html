@@ -55,6 +55,11 @@
   .mrow .ctl{display:flex;align-items:center;gap:8px;justify-self:end}
   .mrow .ctl input[type=number]{width:92px;padding:7px 9px;font-size:.9rem}
   .mrow .ctl .u{font-size:.72rem;color:var(--dim);font-family:var(--mono)}
+  .ctl2{display:flex;flex-direction:column;gap:6px;justify-self:end}
+  .cirow{display:flex;align-items:center;gap:6px;justify-content:flex-end}
+  .cirow label{font-size:.66rem;color:var(--dim);margin:0;white-space:nowrap}
+  .cirow input[type=number]{width:76px;padding:6px 8px;font-size:.85rem}
+  .cirow .u{font-size:.7rem;color:var(--dim);font-family:var(--mono);min-width:14px}
   .mrow .ctl .chk{display:flex;align-items:center;gap:4px;font-size:.72rem;color:var(--sub);cursor:pointer;white-space:nowrap}
   .mrow .ctl .chk input{width:auto;margin:0;accent-color:var(--acc2)}
   .tog{position:relative;display:inline-block;width:46px;height:26px;flex:none}
@@ -163,25 +168,26 @@
       </div>
       <div class="mrow">
         <div class="t" data-i18n-html="tree31"></div>
-        <div class="ctl"><input type="number" id="tree31" value="1" min="1" step="0.001"><span class="u">/x</span></div>
+        <div class="ctl2">
+          <div class="cirow"><label data-i18n="treeVal">ツリーの値</label><input type="number" id="tree31" value="1" min="1" step="0.001"><span class="u">/x</span></div>
+          <div class="cirow"><label data-i18n="treePen">ペナルティ</label><input type="number" id="tree31ov" value="" min="0" step="0.001" placeholder="auto"><span class="u">^</span></div>
+        </div>
       </div>
       <div class="mrow">
         <div class="t" data-i18n-html="tree32"></div>
-        <div class="ctl"><input type="number" id="tree32" value="1" min="1" step="0.001"><span class="u">/x</span></div>
+        <div class="ctl2">
+          <div class="cirow"><label data-i18n="treeVal">ツリーの値</label><input type="number" id="tree32" value="1" min="1" step="0.001"><span class="u">/x</span></div>
+          <div class="cirow"><label data-i18n="treePen">ペナルティ</label><input type="number" id="tree32ov" value="" min="0" step="0.001" placeholder="auto"><span class="u">^</span></div>
+        </div>
       </div>
       <div class="mrow">
         <div class="t" data-i18n-html="tree62"></div>
-        <div class="ctl"><input type="number" id="tree62" value="1" min="1" step="0.001"><span class="u">/x</span></div>
+        <div class="ctl2">
+          <div class="cirow"><label data-i18n="treeVal">ツリーの値</label><input type="number" id="tree62" value="1" min="1" step="0.001"><span class="u">/x</span></div>
+          <div class="cirow"><label data-i18n="treePen">ペナルティ</label><input type="number" id="tree62ov" value="" min="0" step="0.001" placeholder="auto"><span class="u">^</span></div>
+        </div>
       </div>
     </div>
-    <details class="adv">
-      <summary data-i18n="treeBaseSum">ペナルティ指数を直接上書き</summary>
-      <div class="mit" style="margin-top:10px">
-        <div class="mrow"><div class="t" data-i18n="tb31">ツリー3.1 実効指数</div><div class="ctl"><input type="number" id="tree31ov" value="" min="0" step="0.001" placeholder="auto"><span class="u">^</span></div></div>
-        <div class="mrow"><div class="t" data-i18n="tb32">ツリー3.2 実効指数</div><div class="ctl"><input type="number" id="tree32ov" value="" min="0" step="0.001" placeholder="auto"><span class="u">^</span></div></div>
-        <div class="mrow"><div class="t" data-i18n="tb62">ツリー6.2 実効指数</div><div class="ctl"><input type="number" id="tree62ov" value="" min="0" step="0.001" placeholder="auto"><span class="u">^</span></div></div>
-      </div>
-    </details>
   </div>
 
   <div class="card">
@@ -282,8 +288,7 @@
       tree31:'ツリー3.1：<b>1.8e308</b> ペナルティ弱化<small>ツリー表記の値 x（1〜約1.2）。実効指数 = 0.12 / (2 − x)</small>',
       tree32:'ツリー3.2：<b>1e500</b> ペナルティ弱化<small>ツリー表記の値 x（1〜約1.2）。実効指数 = 0.05 / (2 − x)</small>',
       tree62:'ツリー6.2：<b>1e1000</b> ペナルティ弱化<small>ツリー表記の値 x（1〜約1.2）。実効指数 = 0.033 / (2 − x)</small>',
-      treeBaseSum:"ペナルティ指数を直接上書き（空欄なら /x 計算）",
-      tb31:"ツリー3.1 実効指数（ゲーム表示値）", tb32:"ツリー3.2 実効指数（ゲーム表示値）", tb62:"ツリー6.2 実効指数（ゲーム表示値）",
+      treeVal:"ツリーの値", treePen:"ペナルティ",
       c4:"バフ（強化）",
       virusL:'進行7 ウィルスの昇華<small>達成で 原子獲得量^1.02、未達成は ^0.02（重ペナルティ）</small>',
       singCntL:'特異点回数アトム倍率<small>アトム量1から常時 原子獲得量^この値（既定1＝効果なし）</small>',
@@ -336,8 +341,7 @@
       tree31:'Tree 3.1: weaken <b>1.8e308</b><small>tree "/x" value (1–~1.2). Eff. exp = 0.12 / (2 − x)</small>',
       tree32:'Tree 3.2: weaken <b>1e500</b><small>tree "/x" value (1–~1.2). Eff. exp = 0.05 / (2 − x)</small>',
       tree62:'Tree 6.2: weaken <b>1e1000</b><small>tree "/x" value (1–~1.2). Eff. exp = 0.033 / (2 − x)</small>',
-      treeBaseSum:"Override penalty exponent (blank = /x)",
-      tb31:"Tree 3.1 exponent (game value)", tb32:"Tree 3.2 exponent (game value)", tb62:"Tree 6.2 exponent (game value)",
+      treeVal:"Tree value", treePen:"Penalty",
       c4:"Buffs",
       virusL:'Prog. 7 Viral Sublimation<small>done: atom gain ^1.02; not done: ^0.02 (heavy penalty)</small>',
       singCntL:'Singularity-count atom mult<small>always from atom 1: atom gain ^this (default 1 = no effect)</small>',
