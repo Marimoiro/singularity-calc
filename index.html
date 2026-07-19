@@ -43,6 +43,11 @@
   .seg button{flex:1;background:#0e1124;border:1px solid var(--line);color:var(--sub);padding:9px;border-radius:9px;font-size:.85rem;cursor:pointer;transition:.15s}
   .seg button.on{background:#2a2f57;color:var(--txt);border-color:var(--acc)}
 
+  details.adv{margin-top:12px;border-top:1px dashed var(--line);padding-top:12px}
+  details.adv summary{cursor:pointer;color:var(--dim);font-size:.8rem;list-style:none}
+  details.adv summary::-webkit-details-marker{display:none}
+  details.adv summary:before{content:"▸ ";color:var(--acc)}
+  details.adv[open] summary:before{content:"▾ "}
   .mit{display:grid;grid-template-columns:1fr;gap:10px}
   .mrow{display:grid;grid-template-columns:1fr auto;align-items:center;gap:12px;background:#0e1124;border:1px solid var(--line);border-radius:11px;padding:10px 13px}
   .mrow .t{font-size:.85rem;color:var(--txt)}
@@ -169,6 +174,14 @@
         <div class="ctl"><input type="number" id="tree62" value="1" min="1" step="0.001"><span class="u">/x</span></div>
       </div>
     </div>
+    <details class="adv">
+      <summary data-i18n="treeBaseSum">ペナルティ指数を直接上書き</summary>
+      <div class="mit" style="margin-top:10px">
+        <div class="mrow"><div class="t" data-i18n="tb31">ツリー3.1 実効指数</div><div class="ctl"><input type="number" id="tree31ov" value="" min="0" step="0.001" placeholder="auto"><span class="u">^</span></div></div>
+        <div class="mrow"><div class="t" data-i18n="tb32">ツリー3.2 実効指数</div><div class="ctl"><input type="number" id="tree32ov" value="" min="0" step="0.001" placeholder="auto"><span class="u">^</span></div></div>
+        <div class="mrow"><div class="t" data-i18n="tb62">ツリー6.2 実効指数</div><div class="ctl"><input type="number" id="tree62ov" value="" min="0" step="0.001" placeholder="auto"><span class="u">^</span></div></div>
+      </div>
+    </details>
   </div>
 
   <div class="card">
@@ -269,6 +282,8 @@
       tree31:'ツリー3.1：<b>1.8e308</b> ペナルティ弱化<small>ツリー表記の値 x（1〜約1.2）。実効指数 = 0.12 / (2 − x)</small>',
       tree32:'ツリー3.2：<b>1e500</b> ペナルティ弱化<small>ツリー表記の値 x（1〜約1.2）。実効指数 = 0.05 / (2 − x)</small>',
       tree62:'ツリー6.2：<b>1e1000</b> ペナルティ弱化<small>ツリー表記の値 x（1〜約1.2）。実効指数 = 0.033 / (2 − x)</small>',
+      treeBaseSum:"ペナルティ指数を直接上書き（空欄なら /x 計算）",
+      tb31:"ツリー3.1 実効指数（ゲーム表示値）", tb32:"ツリー3.2 実効指数（ゲーム表示値）", tb62:"ツリー6.2 実効指数（ゲーム表示値）",
       c4:"バフ（強化）",
       virusL:'進行7 ウィルスの昇華<small>達成で 原子獲得量^1.02、未達成は ^0.02（重ペナルティ）</small>',
       singCntL:'特異点回数アトム倍率<small>アトム量1から常時 原子獲得量^この値（既定1＝効果なし）</small>',
@@ -321,6 +336,8 @@
       tree31:'Tree 3.1: weaken <b>1.8e308</b><small>tree "/x" value (1–~1.2). Eff. exp = 0.12 / (2 − x)</small>',
       tree32:'Tree 3.2: weaken <b>1e500</b><small>tree "/x" value (1–~1.2). Eff. exp = 0.05 / (2 − x)</small>',
       tree62:'Tree 6.2: weaken <b>1e1000</b><small>tree "/x" value (1–~1.2). Eff. exp = 0.033 / (2 − x)</small>',
+      treeBaseSum:"Override penalty exponent (blank = /x)",
+      tb31:"Tree 3.1 exponent (game value)", tb32:"Tree 3.2 exponent (game value)", tb62:"Tree 6.2 exponent (game value)",
       c4:"Buffs",
       virusL:'Prog. 7 Viral Sublimation<small>done: atom gain ^1.02; not done: ^0.02 (heavy penalty)</small>',
       singCntL:'Singularity-count atom mult<small>always from atom 1: atom gain ^this (default 1 = no effect)</small>',
@@ -426,6 +443,7 @@
       relic69=$("relic69"), singCnt=$("singCnt"), virus=$("virus"),
       rn126=$("rn126"), rn127=$("rn127"), rn128=$("rn128"), rn128chk=$("rn128chk"),
       tree31=$("tree31"), tree32=$("tree32"), tree62=$("tree62"),
+      tree31ov=$("tree31ov"), tree32ov=$("tree32ov"), tree62ov=$("tree62ov"),
       singSel=$("singSel"), singReq=$("singReq"), tgtAtom=$("tgtAtom"),
       singBox=$("singBox"), atomBox=$("atomBox"), copyBtn=$("copyBtn");
   var mode="sing";
@@ -463,10 +481,15 @@
     var r69=parseFloat(relic69.value); if(!isFinite(r69)||r69<0) r69=1.0;
     var sc=parseFloat(singCnt.value); if(!isFinite(sc)||sc<0) sc=1.0;
     var vir = virus.checked ? 1.02 : 0.02;
-    function treeExp(base,x){ if(!isFinite(x)||x<1) x=1; var d=2-x; return d<=0?1:Math.min(1, base/d); }
-    var t31=treeExp(0.12,  parseFloat(tree31.value));
-    var t32=treeExp(0.05,  parseFloat(tree32.value));
-    var t62=treeExp(0.033, parseFloat(tree62.value));
+    // 上書き欄が空でなければゲーム表示の実効指数を直接使用。空なら base/(2−x)。
+    function treeEff(ovEl, baseDef, xEl){
+      var ov=(ovEl.value||"").trim();
+      if(ov!==""){ var v=parseFloat(ov); if(isFinite(v)&&v>=0) return Math.min(1,v); }
+      var x=parseFloat(xEl.value); if(!isFinite(x)||x<1) x=1; var d=2-x; return d<=0?1:Math.min(1, baseDef/d);
+    }
+    var t31=treeEff(tree31ov, 0.12,  tree31);
+    var t32=treeEff(tree32ov, 0.05,  tree32);
+    var t62=treeEff(tree62ov, 0.033, tree62);
     var l128=parseInt(rn128.value,10); if(!isFinite(l128)||l128<0) l128=0; if(l128>10) l128=10;
     return {relic69:r69, singCnt:sc, virus:vir, rn126:rn126.checked, rn127:rn127.checked, rn128:l128,
             tree31:t31, tree32:t32, tree62:t62};
@@ -554,7 +577,7 @@
     });
   });
 
-  var FIELDS=["singMult","curAtom","localSpeed","relic69","singCnt","rn128","tree31","tree32","tree62","tgtAtom","singSel"];
+  var FIELDS=["singMult","curAtom","localSpeed","relic69","singCnt","rn128","tree31","tree32","tree62","tree31ov","tree32ov","tree62ov","tgtAtom","singSel"];
   var CHECKS=["virus","localSpeedOn","rn126","rn127","rn128chk"];
   function save(){
     try{
@@ -614,7 +637,7 @@
     else fallback();
   });
 
-  [singMult,curAtom,localSpeed,localSpeedOn,relic69,singCnt,virus,rn126,rn127,rn128,tree31,tree32,tree62,singSel,tgtAtom].forEach(function(el){
+  [singMult,curAtom,localSpeed,localSpeedOn,relic69,singCnt,virus,rn126,rn127,rn128,tree31,tree32,tree62,tree31ov,tree32ov,tree62ov,singSel,tgtAtom].forEach(function(el){
     el.addEventListener("input",update); el.addEventListener("change",update);
   });
 
