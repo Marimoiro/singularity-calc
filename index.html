@@ -18,11 +18,13 @@
   }
   .wrap{max-width:880px;margin:0 auto;padding:28px 18px 80px}
   header{position:relative}
-  header h1{font-size:1.5rem;margin:0 0 4px;letter-spacing:.02em;padding-right:120px}
+  header h1{font-size:1.5rem;margin:0 0 4px;letter-spacing:.02em;padding-right:180px}
   header h1 .g{background:linear-gradient(90deg,var(--acc),var(--acc2));-webkit-background-clip:text;background-clip:text;color:transparent}
   header p{color:var(--sub);margin:0 0 22px;font-size:.9rem}
   .langsw{position:absolute;top:0;right:0;display:flex;gap:6px}
-  .langsw button{background:#0e1124;border:1px solid var(--line);color:var(--sub);border-radius:8px;padding:5px 10px;font-size:.75rem;cursor:pointer;transition:.15s}
+  .langsw button,.langsw a.repo{background:#0e1124;border:1px solid var(--line);color:var(--sub);border-radius:8px;padding:5px 10px;font-size:.75rem;cursor:pointer;transition:.15s}
+  .langsw a.repo{text-decoration:none;display:inline-flex;align-items:center;gap:4px}
+  .langsw a.repo:hover{border-color:var(--acc);color:var(--txt)}
   .langsw button.on{background:#2a2f57;color:var(--txt);border-color:var(--acc)}
   .card{background:linear-gradient(180deg,var(--card),var(--card2));border:1px solid var(--line);border-radius:16px;padding:18px 18px 20px;margin-bottom:18px;box-shadow:0 10px 30px -18px #000}
   .card h2{font-size:.95rem;margin:0 0 14px;color:var(--acc2);font-weight:600;letter-spacing:.03em;display:flex;align-items:center;gap:8px}
@@ -105,6 +107,7 @@
 <div class="wrap">
   <header>
     <div class="langsw">
+      <a class="repo" href="https://github.com/Marimoiro/singularity-calc" target="_blank" rel="noopener" title="GitHub repository">GitHub ↗</a>
       <button data-lang="ja">日本語</button>
       <button data-lang="en">EN</button>
     </div>
@@ -304,7 +307,7 @@
       segFoot:"アトム量が閾値を超えるたびに「原子獲得量」が累乗され、実効レートが下がります。軽減設定を有効にすると該当区間のペナルティが緩みます。",
       copyBtn:"設定と結果をコピー", copied:"コピーしました ✓",
       ci:"計算モデルと前提",
-      modelP:'アトムは毎秒 ×a になるので、<b>1秒で log₁₀(a) 桁</b>増えます。到達時間 ≈ <b>伸ばす桁数 ÷ (増える桁/秒)</b>。<br>ざっくり見積もり: 倍率を <b>10倍</b>にすると増える桁/秒が <b>+1</b>（例 3→4桁/秒）。「1桁/秒 増やすには倍率×10」という感覚です。<br>ペナルティもバフも全部 <b>掛け算</b>で指数にかかります（増える桁/秒 = log₁₀(特異点倍率) × E）。閾値を超えて E が小さくなるほど遅くなります。<br>式で書くと: <code style="all:unset;color:var(--acc2)">t = log₁₀(目標/現在) ÷ log₁₀(a)</code>、実効レート <code style="all:unset;color:var(--acc2)">a = B^E</code>（B＝特異点倍率、E＝その地点で有効な全指数の積）。<br><span class="pill">前提</span> ベース獲得量は周回中一定。サクリファイスダスト・拡散力系は未反映。必要アトム量は wiki の区間式に基づく近似値。',
+      modelP:'アトムは毎秒 ×a になるので、<b>1秒で log₁₀(a) 桁</b>増えます。到達時間 ≈ <b>伸ばす桁数 ÷ (増える桁/秒)</b>。<br>ざっくり見積もり: 倍率を <b>10倍</b>にすると増える桁/秒が <b>+1</b>（例 3→4桁/秒）。「1桁/秒 増やすには倍率×10」という感覚です。<br>ペナルティもバフも全部 <b>掛け算</b>で指数にかかります（増える桁/秒 = log₁₀(特異点倍率) × E）。閾値を超えて E が小さくなるほど遅くなります。<br>式で書くと: <code style="all:unset;color:var(--acc2)">t = log₁₀(目標/現在) ÷ log₁₀(a)</code>、実効レート <code style="all:unset;color:var(--acc2)">a = B^E</code>（B＝特異点倍率、E＝その地点で有効な全指数の積）。<br>※ ツリー弱化の計算式は不明なため <b>仮の式</b> です。正確に合わせたいときは、ゲーム表示の実効指数を各ツリーの「ペナルティ」欄に直接入力してください。<br><span class="pill">前提</span> ベース獲得量は周回中一定。サクリファイスダスト・拡散力系は未反映。必要アトム量は wiki の区間式に基づく近似値。',
       srcP:'出典: <a href="https://wikiwiki.jp/revoidle/Singularity" target="_blank" rel="noopener">特異点</a> / <a href="https://wikiwiki.jp/revoidle/Minerals/%E4%B8%80%E8%A6%A7" target="_blank" rel="noopener">精錬ノード一覧</a>',
       disclaimer:"免責事項: 本ツールはあくまでシミュレーターです。ゲーム内の数値の丸め・仕様変更・入力値の誤差などにより、実際とは値が異なる場合があります。本ツールの利用によって生じたいかなる不利益・損害についても、作者は一切の責任を負いません。",
       reqAtoms:"必要アトム量 ≈ ",
@@ -358,7 +361,7 @@
       segFoot:"Each time atoms cross a threshold, atom gain is raised to a power and the effective rate drops. Enabling a mitigation eases that segment's penalty.",
       copyBtn:"Copy settings & result", copied:"Copied ✓",
       ci:"Model & assumptions",
-      modelP:'Atoms become ×a per second, so you gain <b>log₁₀(a) digits per second</b>. Time ≈ <b>digits to grow ÷ digits-per-sec</b>.<br>Rough rule: ×<b>10</b> on the multiplier adds <b>+1</b> digit/sec (e.g. 3→4/sec) — one more digit/sec costs a 10× multiplier.<br>Penalties and buffs are all <b>multiplication</b> on the exponent (digits/sec = log₁₀(sing. mult) × E). The smaller E gets past each threshold, the slower it goes.<br>As a formula: <code style="all:unset;color:var(--acc2)">t = log₁₀(target/current) ÷ log₁₀(a)</code>, effective rate <code style="all:unset;color:var(--acc2)">a = B^E</code> (B = sing. multiplier, E = product of active exponents).<br><span class="pill">Assumes</span> base gain constant per run; sacrifice-dust / spread buffs not modeled; required atoms approximated from wiki formulas.',
+      modelP:'Atoms become ×a per second, so you gain <b>log₁₀(a) digits per second</b>. Time ≈ <b>digits to grow ÷ digits-per-sec</b>.<br>Rough rule: ×<b>10</b> on the multiplier adds <b>+1</b> digit/sec (e.g. 3→4/sec) — one more digit/sec costs a 10× multiplier.<br>Penalties and buffs are all <b>multiplication</b> on the exponent (digits/sec = log₁₀(sing. mult) × E). The smaller E gets past each threshold, the slower it goes.<br>As a formula: <code style="all:unset;color:var(--acc2)">t = log₁₀(target/current) ÷ log₁₀(a)</code>, effective rate <code style="all:unset;color:var(--acc2)">a = B^E</code> (B = sing. multiplier, E = product of active exponents).<br>* The tree-weaken formula is unknown, so it is a <b>tentative formula</b>. For accuracy, type the in-game effective exponent into the Penalty box of each tree.<br><span class="pill">Assumes</span> base gain constant per run; sacrifice-dust / spread buffs not modeled; required atoms approximated from wiki formulas.',
       srcP:'Source: <a href="https://wikiwiki.jp/revoidle/Singularity" target="_blank" rel="noopener">Singularity</a> / <a href="https://wikiwiki.jp/revoidle/Minerals/%E4%B8%80%E8%A6%A7" target="_blank" rel="noopener">Refine nodes</a>',
       disclaimer:"Disclaimer: This is only a simulator. Actual values may differ due to in-game rounding, spec changes, or input errors. The author accepts no liability whatsoever for any loss or disadvantage arising from use of this tool.",
       reqAtoms:"Required atoms ≈ ",
