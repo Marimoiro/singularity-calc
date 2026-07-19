@@ -171,6 +171,10 @@
         <div class="ctl"><input type="number" id="singCnt" value="1" min="0" step="0.01"><span class="u">^</span></div>
       </div>
       <div class="mrow">
+        <div class="t">進行7 ウィルスの昇華<small>アトム量1から常時 原子獲得量^この値（達成1.02 / 未達成0.02 / なし1）</small></div>
+        <div class="ctl"><input type="number" id="virus" value="1.02" min="0" step="0.01"><span class="u">^</span></div>
+      </div>
+      <div class="mrow">
         <div class="t">遺物69<small>1e6以上で 原子獲得量^この値（1〜2程度、既定1）</small></div>
         <div class="ctl"><input type="number" id="relic69" value="1.0" min="0" step="0.05"><span class="u">^</span></div>
       </div>
@@ -228,6 +232,7 @@
     var rn128 = Math.min(1.0, 0.5 + 0.05*(s.rn128||0));   // 1e10: Lv10で1.0(無効)
     return [
       {log:0,       e:s.singCnt, kind:"buf", base:"^特異点回数倍率"},   // アトム1から常時
+      {log:0,       e:s.virus,   kind:"buf", base:"^ウィルスの昇華"},   // アトム1から常時
       {log:6,       e:s.relic69, kind:"buf", base:"^遺物69"},          // 1e6 強化
       {log:10,      e:rn128,     kind:"pen", base:"^0.5",   mit:s.rn128>0},
       {log:50,      e:s.rn126?1:0.833, kind:"pen", base:"^0.833", mit:s.rn126},
@@ -292,7 +297,7 @@
   }
 
   var $=function(id){return document.getElementById(id);};
-  var singMult=$("singMult"), curAtom=$("curAtom"), relic69=$("relic69"), singCnt=$("singCnt"),
+  var singMult=$("singMult"), curAtom=$("curAtom"), relic69=$("relic69"), singCnt=$("singCnt"), virus=$("virus"),
       rn126=$("rn126"), rn127=$("rn127"), rn128=$("rn128"), rn128chk=$("rn128chk"),
       tree31=$("tree31"), tree32=$("tree32"), tree62=$("tree62"),
       singSel=$("singSel"), singReq=$("singReq"), tgtAtom=$("tgtAtom"),
@@ -323,6 +328,7 @@
   function settings(){
     var r69=parseFloat(relic69.value); if(!isFinite(r69)||r69<0) r69=1.0;
     var sc=parseFloat(singCnt.value); if(!isFinite(sc)||sc<0) sc=1.0;
+    var vir=parseFloat(virus.value); if(!isFinite(vir)||vir<0) vir=1.02;
     // ツリー表記 /x（初期1）。実効ペナルティ指数 = 元の指数 × x（上限1）
     var x31=parseFloat(tree31.value); if(!isFinite(x31)||x31<=0) x31=1;
     var x32=parseFloat(tree32.value); if(!isFinite(x32)||x32<=0) x32=1;
@@ -331,7 +337,7 @@
     var t32=Math.min(1, 0.05*x32);
     var t62=Math.min(1, 0.033*x62);
     var l128=parseInt(rn128.value,10); if(!isFinite(l128)||l128<0) l128=0; if(l128>10) l128=10;
-    return {relic69:r69, singCnt:sc, rn126:rn126.checked, rn127:rn127.checked, rn128:l128,
+    return {relic69:r69, singCnt:sc, virus:vir, rn126:rn126.checked, rn127:rn127.checked, rn128:l128,
             tree31:t31, tree32:t32, tree62:t62};
   }
   function targetLog(){
@@ -413,7 +419,7 @@
 
   // ---- 設定値の保存/復元 ----
   var STORE="revoidle-sing-calc-v2";
-  var FIELDS=["singMult","curAtom","relic69","singCnt","rn128","tree31","tree32","tree62","tgtAtom","singSel"];
+  var FIELDS=["singMult","curAtom","relic69","singCnt","virus","rn128","tree31","tree32","tree62","tgtAtom","singSel"];
   var CHECKS=["rn126","rn127","rn128chk"];
   function save(){
     try{
@@ -448,7 +454,7 @@
     var L=[];
     L.push("[特異点 到達時間計算機 デバッグ]");
     L.push("特異点倍率="+singMult.value+"  現在アトム="+curAtom.value);
-    L.push("バフ: 特異点回数アトム倍率="+singCnt.value+"  遺物69="+relic69.value);
+    L.push("バフ: 特異点回数アトム倍率="+singCnt.value+"  ウィルスの昇華="+virus.value+"  遺物69="+relic69.value);
     L.push("軽減: RN126="+(rn126.checked?"ON":"OFF")+"  RN127="+(rn127.checked?"ON":"OFF")+"  RN128=Lv"+rn128.value
          +"  ツリー3.1 x="+tree31.value+"(実効"+s.tree31.toFixed(4)+")"
          +"  3.2 x="+tree32.value+"(実効"+s.tree32.toFixed(4)+")"
@@ -477,7 +483,7 @@
     else fallback();
   });
 
-  [singMult,curAtom,relic69,singCnt,rn126,rn127,rn128,tree31,tree32,tree62,singSel,tgtAtom].forEach(function(el){
+  [singMult,curAtom,relic69,singCnt,virus,rn126,rn127,rn128,tree31,tree32,tree62,singSel,tgtAtom].forEach(function(el){
     el.addEventListener("input",update); el.addEventListener("change",update);
   });
   load();
