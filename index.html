@@ -82,9 +82,9 @@
   th{color:var(--sub);font-weight:600;font-family:inherit;font-size:.75rem;position:sticky;top:0;background:var(--card2)}
   td:first-child,th:first-child{text-align:left}
   tr td{color:var(--txt)}
-  tr.pen td:first-child{color:var(--bad)}
-  tr.buf td:first-child{color:var(--ok)}
-  tr.off td{color:var(--dim);text-decoration:line-through}
+  tr.pen td:nth-child(2){color:var(--bad)}
+  tr.buf td:nth-child(2){color:var(--ok)}
+  tr.off td:nth-child(2){color:var(--dim);text-decoration:line-through}
   .foot{color:var(--dim);font-size:.76rem;margin-top:10px}
   .foot code{background:#0e1124;padding:1px 5px;border-radius:5px;color:var(--acc2)}
   a{color:var(--acc2)}
@@ -212,7 +212,7 @@
     </div>
     <div class="scroll">
       <table id="segTable">
-        <thead><tr><th>区間 (アトム)</th><th>累積指数 E</th><th>実効 ×/秒</th><th title="この区間で伸びるアトムの桁幅(log₁₀)">桁幅</th><th>所要時間</th></tr></thead>
+        <thead><tr><th>区間 (アトム)</th><th title="この区間の開始時に発動する効果(バフ/ペナルティ)">効果</th><th>累積指数 E</th><th>実効 ×/秒</th><th title="この区間で伸びるアトムの桁幅(log₁₀)">桁幅</th><th>所要時間</th></tr></thead>
         <tbody></tbody>
       </table>
     </div>
@@ -239,20 +239,20 @@
   function thresholds(s){
     var rn128 = Math.min(1.0, 0.5 + 0.05*(s.rn128||0));   // 1e10: Lv10で1.0(無効)
     return [
-      {log:0,       e:s.singCnt, kind:"buf", base:"^特異点回数倍率"},   // アトム1から常時
-      {log:0,       e:s.virus,   kind:"buf", base:"^ウィルスの昇華"},   // アトム1から常時
-      {log:6,       e:s.relic69, kind:"buf", base:"^遺物69"},          // 1e6 強化
-      {log:10,      e:rn128,     kind:"pen", base:"^0.5",   mit:s.rn128>0},
-      {log:50,      e:s.rn126?1:0.833, kind:"pen", base:"^0.833", mit:s.rn126},
-      {log:154.146, e:s.rn127?1:0.847, kind:"pen", base:"^0.847", mit:s.rn127},
-      {log:256.204, e:0.714,     kind:"pen", base:"^0.714"},
-      {log:308.255, e:s.tree31,  kind:"pen", base:"^0.12",  mit:s.tree31!==0.12},
-      {log:500,     e:s.tree32,  kind:"pen", base:"^0.05",  mit:s.tree32!==0.05},
-      {log:1000,    e:s.tree62,  kind:"pen", base:"^0.033", mit:s.tree62!==0.033},
-      {log:2000,    e:0.5,       kind:"pen", base:"^0.5"},
-      {log:3000,    e:0.333,     kind:"pen", base:"^0.333"},
-      {log:5000,    e:0.2,       kind:"pen", base:"^0.2"},
-      {log:10000,   e:0.1,       kind:"pen", base:"^0.1"}
+      {log:0,       e:s.singCnt, kind:"buf", name:"特異点回数倍率"},     // アトム1から常時
+      {log:0,       e:s.virus,   kind:"buf", name:"ウィルスの昇華"},     // アトム1から常時
+      {log:6,       e:s.relic69, kind:"buf", name:"遺物69"},            // 1e6 強化
+      {log:10,      e:rn128,     kind:"pen", name:"^0.5 (RN128)"},
+      {log:50,      e:s.rn126?1:0.833, kind:"pen", name:"^0.833 (RN126)"},
+      {log:154.146, e:s.rn127?1:0.847, kind:"pen", name:"^0.847 (RN127)"},
+      {log:256.204, e:0.714,     kind:"pen", name:"^0.714"},
+      {log:308.255, e:s.tree31,  kind:"pen", name:"^0.12 (ツリー3.1)"},
+      {log:500,     e:s.tree32,  kind:"pen", name:"^0.05 (ツリー3.2)"},
+      {log:1000,    e:s.tree62,  kind:"pen", name:"^0.033 (ツリー6.2)"},
+      {log:2000,    e:0.5,       kind:"pen", name:"^0.5"},
+      {log:3000,    e:0.333,     kind:"pen", name:"^0.333"},
+      {log:5000,    e:0.2,       kind:"pen", name:"^0.2"},
+      {log:10000,   e:0.1,       kind:"pen", name:"^0.1"}
     ];
   }
   function Eat(x, ths){ var p=1; for(var i=0;i<ths.length;i++){ if(ths[i].log<=x+1e-9) p*=ths[i].e; } return p; }
@@ -402,9 +402,15 @@
       var t = logAseg>0 ? span/logAseg : Infinity;
       total+=t;
       var td = t/sf;
-      var th=null; for(var j=0;j<ths.length;j++){ if(Math.abs(ths[j].log-hi)<1e-6){ th=ths[j]; break; } }
-      var cls = th? (th.kind==="buf"?"buf":(th.e===1?"off":"pen")) : "";
+      // この区間の開始(lo)で発動する効果（複数可：アトム1では常時バフが並ぶ）
+      var here=[]; for(var j=0;j<ths.length;j++){ if(Math.abs(ths[j].log-lo)<1e-6) here.push(ths[j]); }
+      var eff = here.map(function(x){return x.name;}).join(" ＋ ") || (k===0?"開始":"");
+      var isOff = here.length>0 && here.every(function(x){return x.e===1;});
+      var isPen = here.some(function(x){return x.kind==="pen" && x.e!==1;});
+      var isBuf = here.some(function(x){return x.kind==="buf" && x.e!==1;});
+      var cls = isOff?"off":(isPen?"pen":(isBuf?"buf":""));
       rows+='<tr class="'+cls+'"><td>'+fmtLog(lo)+' → '+fmtLog(hi)+'</td>'
+          +'<td>'+eff+'</td>'
           +'<td>'+Eseg.toPrecision(3)+'</td>'
           +'<td>'+(logAseg>0?fmtRate(logAseg):"—")+'</td>'
           +'<td>'+span.toFixed(1)+'</td>'
