@@ -137,27 +137,27 @@
     <h2><span class="n">3</span>ペナルティ軽減設定</h2>
     <div class="mit">
       <div class="mrow">
-        <div class="t">精錬RN126：<b>1e50</b> ペナルティを無効化<small>原子獲得量 ^0.833 → 無効</small></div>
+        <div class="t">RN126：<b>1e50</b> ペナルティを無効化<small>原子獲得量 ^0.833 → 無効</small></div>
         <div class="ctl"><label class="tog"><input type="checkbox" id="rn126"><span class="sl"></span></label></div>
       </div>
       <div class="mrow">
-        <div class="t">精錬RN127：<b>1.4e154</b> ペナルティを無効化<small>原子獲得量 ^0.847 → 無効</small></div>
+        <div class="t">RN127：<b>1.4e154</b> ペナルティを無効化<small>原子獲得量 ^0.847 → 無効</small></div>
         <div class="ctl"><label class="tog"><input type="checkbox" id="rn127"><span class="sl"></span></label></div>
       </div>
       <div class="mrow">
-        <div class="t">精錬RN128：<b>1e10</b> ペナルティ弱化<small>指数 = 0.5 + 0.05×Lv（Lv10で無効）</small></div>
+        <div class="t">RN128：<b>1e10</b> ペナルティ弱化<small>指数 = 0.5 + 0.05×Lv（Lv10で無効）</small></div>
         <div class="ctl"><label class="chk"><input type="checkbox" id="rn128chk">MAX</label><input type="number" id="rn128" value="0" min="0" max="10" step="1"><span class="u">Lv</span></div>
       </div>
       <div class="mrow">
-        <div class="t">特異点ツリー3.1：<b>1.8e308</b> ペナルティ弱化<small>ツリー表記の値 x（初期1）。実効指数 = 0.12 × x</small></div>
+        <div class="t">ツリー3.1：<b>1.8e308</b> ペナルティ弱化<small>ツリー表記の値 x（初期1）。実効指数 = 0.12 × x</small></div>
         <div class="ctl"><input type="number" id="tree31" value="1" min="1" step="0.01"><span class="u">/x</span></div>
       </div>
       <div class="mrow">
-        <div class="t">特異点ツリー3.2：<b>1e500</b> ペナルティ弱化<small>ツリー表記の値 x（初期1）。実効指数 = 0.05 × x</small></div>
+        <div class="t">ツリー3.2：<b>1e500</b> ペナルティ弱化<small>ツリー表記の値 x（初期1）。実効指数 = 0.05 × x</small></div>
         <div class="ctl"><input type="number" id="tree32" value="1" min="1" step="0.01"><span class="u">/x</span></div>
       </div>
       <div class="mrow">
-        <div class="t">特異点ツリー6.2：<b>1e1000</b> ペナルティ弱化<small>ツリー表記の値 x（初期1）。実効指数 = 0.033 × x</small></div>
+        <div class="t">ツリー6.2：<b>1e1000</b> ペナルティ弱化<small>ツリー表記の値 x（初期1）。実効指数 = 0.033 × x</small></div>
         <div class="ctl"><input type="number" id="tree62" value="1" min="1" step="0.01"><span class="u">/x</span></div>
       </div>
     </div>
@@ -171,12 +171,12 @@
         <div class="ctl"><input type="number" id="singCnt" value="1" min="0" step="0.01"><span class="u">^</span></div>
       </div>
       <div class="mrow">
-        <div class="t">進行7 ウィルスの昇華<small>アトム量1から常時 原子獲得量^この値（達成1.02 / 未達成0.02 / なし1）</small></div>
-        <div class="ctl"><input type="number" id="virus" value="1.02" min="0" step="0.01"><span class="u">^</span></div>
-      </div>
-      <div class="mrow">
         <div class="t">遺物69<small>1e6以上で 原子獲得量^この値（1〜2程度、既定1）</small></div>
         <div class="ctl"><input type="number" id="relic69" value="1.0" min="0" step="0.05"><span class="u">^</span></div>
+      </div>
+      <div class="mrow">
+        <div class="t">進行7 ウィルスの昇華<small>アトム量1から常時 原子獲得量^この値（達成1.02 / 未達成0.02 / なし1）</small></div>
+        <div class="ctl"><input type="number" id="virus" value="1.02" min="0" step="0.01"><span class="u">^</span></div>
       </div>
     </div>
   </div>
