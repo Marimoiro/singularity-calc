@@ -91,6 +91,8 @@
   .pill{display:inline-block;background:#0e1124;border:1px solid var(--line);border-radius:999px;padding:2px 9px;font-size:.72rem;color:var(--sub);font-family:var(--mono)}
   .btn{background:#2a2f57;border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:9px 14px;font-size:.82rem;cursor:pointer;transition:.15s;margin-top:12px}
   .btn:hover{border-color:var(--acc)}
+  .chkline{display:inline-flex;align-items:center;gap:7px;font-size:.82rem;color:var(--sub);cursor:pointer}
+  .chkline input{accent-color:var(--acc2);width:16px;height:16px}
 </style>
 
 <div class="wrap">
@@ -112,6 +114,11 @@
         <input id="curAtom" type="text" value="1" inputmode="text" />
         <p class="hint">既定 <code style="all:unset">1</code>（周回開始）。途中から計算したい時のみ変更</p>
       </div>
+    </div>
+    <div class="field" style="margin-top:14px">
+      <label>ローカル速度</label>
+      <input id="localSpeed" type="text" value="1" inputmode="text" />
+      <p class="hint">特異点タブのローカル速度。2なら時間が2倍速で進む（所要時間が半分）。例 <code style="all:unset">1440</code></p>
     </div>
   </div>
 
@@ -175,8 +182,8 @@
         <div class="ctl"><input type="number" id="relic69" value="1.0" min="0" step="0.05"><span class="u">^</span></div>
       </div>
       <div class="mrow">
-        <div class="t">進行7 ウィルスの昇華<small>アトム量1から常時 原子獲得量^この値（達成1.02 / 未達成0.02 / なし1）</small></div>
-        <div class="ctl"><input type="number" id="virus" value="1.02" min="0" step="0.01"><span class="u">^</span></div>
+        <div class="t">進行7 ウィルスの昇華<small>達成で 原子獲得量^1.02、未達成は ^0.02（重ペナルティ）</small></div>
+        <div class="ctl"><label class="tog"><input type="checkbox" id="virus" checked><span class="sl"></span></label></div>
       </div>
     </div>
   </div>
@@ -187,6 +194,7 @@
       <div class="lbl">到達までの推定時間</div>
       <div class="big" id="timeBig">—</div>
       <div class="sub" id="timeSub"></div>
+      <div style="margin-top:12px"><label class="chkline"><input type="checkbox" id="localSpeedOn" checked>ローカル速度を反映</label></div>
     </div>
     <div class="stat">
       <div class="b"><div class="k">目標地点の実効レート</div><div class="v" id="stTgt">—</div></div>
@@ -266,11 +274,11 @@
     return mant.toFixed(2)+"e"+exp;
   }
   var rateMode="std";
-  // ゲーム表示に合わせた倍率表記（×1.0130 / ×100 / ×1.50e4 …）
+  // ゲーム表示に合わせた倍率表記（×1.0130 / ×2,540,000 / e9以上は ×2.54e9）
   function fmtRate(logA){
     if(logA<=0) return "×1 以下";
     if(rateMode==="exp") return "×10^"+logA.toFixed(3);
-    if(logA<4){ var a=Math.pow(10,logA); return "×"+(a<10? a.toFixed(4): a.toPrecision(4)); }
+    if(logA<9){ var a=Math.pow(10,logA); return "×"+a.toLocaleString("en-US",{maximumFractionDigits: a<10?4:(a<1000?2:0)}); }
     return "×"+fmtLog(logA);
   }
   function fmtTime(s){
@@ -297,7 +305,8 @@
   }
 
   var $=function(id){return document.getElementById(id);};
-  var singMult=$("singMult"), curAtom=$("curAtom"), relic69=$("relic69"), singCnt=$("singCnt"), virus=$("virus"),
+  var singMult=$("singMult"), curAtom=$("curAtom"), localSpeed=$("localSpeed"), localSpeedOn=$("localSpeedOn"),
+      relic69=$("relic69"), singCnt=$("singCnt"), virus=$("virus"),
       rn126=$("rn126"), rn127=$("rn127"), rn128=$("rn128"), rn128chk=$("rn128chk"),
       tree31=$("tree31"), tree32=$("tree32"), tree62=$("tree62"),
       singSel=$("singSel"), singReq=$("singReq"), tgtAtom=$("tgtAtom"),
@@ -328,7 +337,7 @@
   function settings(){
     var r69=parseFloat(relic69.value); if(!isFinite(r69)||r69<0) r69=1.0;
     var sc=parseFloat(singCnt.value); if(!isFinite(sc)||sc<0) sc=1.0;
-    var vir=parseFloat(virus.value); if(!isFinite(vir)||vir<0) vir=1.02;
+    var vir = virus.checked ? 1.02 : 0.02;
     // ツリー表記 /x（初期1）。実効ペナルティ指数 = 元の指数 × x（上限1）
     var x31=parseFloat(tree31.value); if(!isFinite(x31)||x31<=0) x31=1;
     var x32=parseFloat(tree32.value); if(!isFinite(x32)||x32<=0) x32=1;
@@ -368,6 +377,10 @@
     var logB=logM;
     if(logB<=0){ msg("info","特異点倍率を 1 より大きくすると計算されます。"); clearOut(); return; }
 
+    // ローカル速度: 速度sf倍で実時間が1/sfに
+    var lsVal=parseFloat(localSpeed.value); if(!isFinite(lsVal)||lsVal<=0) lsVal=1;
+    var sf = localSpeedOn.checked ? lsVal : 1;
+
     $("stReq").textContent=fmtLog(x1);
     if(x1<=x0){ msg("ok","目標アトム量に既に到達しています（所要時間 0）。");
       $("timeBig").textContent="到達済み"; $("timeSub").textContent="";
@@ -388,17 +401,18 @@
       var span=hi-lo;
       var t = logAseg>0 ? span/logAseg : Infinity;
       total+=t;
+      var td = t/sf;
       var th=null; for(var j=0;j<ths.length;j++){ if(Math.abs(ths[j].log-hi)<1e-6){ th=ths[j]; break; } }
       var cls = th? (th.kind==="buf"?"buf":(th.e===1?"off":"pen")) : "";
       rows+='<tr class="'+cls+'"><td>'+fmtLog(lo)+' → '+fmtLog(hi)+'</td>'
           +'<td>'+Eseg.toPrecision(3)+'</td>'
           +'<td>'+(logAseg>0?fmtRate(logAseg):"—")+'</td>'
           +'<td>'+span.toFixed(1)+'</td>'
-          +'<td>'+fmtTime(t)+'</td></tr>';
+          +'<td>'+fmtTime(td)+'</td></tr>';
     }
 
-    $("timeBig").textContent=fmtTime(total);
-    $("timeSub").textContent="= "+Math.round(total).toLocaleString()+" 秒";
+    $("timeBig").textContent=fmtTime(total/sf);
+    $("timeSub").textContent="= "+Math.round(total/sf).toLocaleString()+" 秒"+(sf!==1?"（ローカル速度 ×"+lsVal+" 反映）":"");
     $("stTgt").textContent=fmtRate(Eat(x1,ths)*logB);
     $("stB").textContent=fmtRate(logB);
     $("stDelta").textContent=(x1-x0).toFixed(1)+" 桁";
@@ -419,8 +433,8 @@
 
   // ---- 設定値の保存/復元 ----
   var STORE="revoidle-sing-calc-v2";
-  var FIELDS=["singMult","curAtom","relic69","singCnt","virus","rn128","tree31","tree32","tree62","tgtAtom","singSel"];
-  var CHECKS=["rn126","rn127","rn128chk"];
+  var FIELDS=["singMult","curAtom","localSpeed","relic69","singCnt","rn128","tree31","tree32","tree62","tgtAtom","singSel"];
+  var CHECKS=["virus","localSpeedOn","rn126","rn127","rn128chk"];
   function save(){
     try{
       var o={mode:mode, rateMode:rateMode};
@@ -453,8 +467,8 @@
     var s=settings();
     var L=[];
     L.push("[特異点 到達時間計算機 デバッグ]");
-    L.push("特異点倍率="+singMult.value+"  現在アトム="+curAtom.value);
-    L.push("バフ: 特異点回数アトム倍率="+singCnt.value+"  ウィルスの昇華="+virus.value+"  遺物69="+relic69.value);
+    L.push("特異点倍率="+singMult.value+"  現在アトム="+curAtom.value+"  ローカル速度="+localSpeed.value+(localSpeedOn.checked?"(反映)":"(無視)"));
+    L.push("バフ: 特異点回数アトム倍率="+singCnt.value+"  遺物69="+relic69.value+"  ウィルスの昇華="+(virus.checked?"達成1.02":"未達成0.02"));
     L.push("軽減: RN126="+(rn126.checked?"ON":"OFF")+"  RN127="+(rn127.checked?"ON":"OFF")+"  RN128=Lv"+rn128.value
          +"  ツリー3.1 x="+tree31.value+"(実効"+s.tree31.toFixed(4)+")"
          +"  3.2 x="+tree32.value+"(実効"+s.tree32.toFixed(4)+")"
@@ -483,7 +497,7 @@
     else fallback();
   });
 
-  [singMult,curAtom,relic69,singCnt,virus,rn126,rn127,rn128,tree31,tree32,tree62,singSel,tgtAtom].forEach(function(el){
+  [singMult,curAtom,localSpeed,localSpeedOn,relic69,singCnt,virus,rn126,rn127,rn128,tree31,tree32,tree62,singSel,tgtAtom].forEach(function(el){
     el.addEventListener("input",update); el.addEventListener("change",update);
   });
   load();
