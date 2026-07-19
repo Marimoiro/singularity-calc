@@ -190,6 +190,10 @@
           <div class="cirow"><label data-i18n="treePen">ペナルティ</label><input type="number" id="tree62ov" value="" min="0" step="any" placeholder="auto"><span class="u">^</span></div>
         </div>
       </div>
+      <div class="mrow">
+        <div class="t" data-i18n-html="otherPenL"></div>
+        <div class="ctl"><input type="number" id="otherPen" value="1" min="0" step="any"><span class="u">^</span></div>
+      </div>
     </div>
   </div>
 
@@ -293,6 +297,7 @@
       tree32:'ツリー3.2：<b>1e500</b> ペナルティ弱化<small>ツリー表記の値 x を入力。実効指数 = 0.05 / (2 − x)。または右のペナルティ欄にゲーム値を直接入力</small>',
       tree62:'ツリー6.2：<b>1e1000</b> ペナルティ弱化<small>ツリー表記の値 x を入力。実効指数 = 0.033 / (2 − x)。または右のペナルティ欄にゲーム値を直接入力</small>',
       treeVal:"ツリーの値", treePen:"ペナルティ",
+      otherPenL:'その他のペナルティ<small>アトム量1から常時 原子獲得量^この値（既定1＝効果なし）。用途に応じて手動で追加</small>',
       c4:"バフ（強化）",
       virusL:'進行7 ウィルスの昇華<small>達成で 原子獲得量^1.02、未達成は ^0.02（重ペナルティ）</small>',
       singCntL:'特異点回数アトム倍率<small>アトム量1から常時 原子獲得量^この値（既定1＝効果なし）</small>',
@@ -320,7 +325,7 @@
       start:"開始", plus:" ＋ ", digits:" 桁", secLabel:" 秒", lsNote:"（ローカル速度 ×%1 反映）",
       rateLE1:"×1 以下",
       tagSingcnt:"特異点回数倍率", tagVirus:"ウィルスの昇華", tagRelic:"遺物69",
-      tagT31:"ツリー3.1", tagT32:"ツリー3.2", tagT62:"ツリー6.2",
+      tagT31:"ツリー3.1", tagT32:"ツリー3.2", tagT62:"ツリー6.2", tagOther:"その他",
       singOne:"特異点 1〜10", singPre:"特異点 ", op:"　（", cp:"）"
     },
     en:{
@@ -347,6 +352,7 @@
       tree32:'Tree 3.2: weaken <b>1e500</b><small>enter the tree "/x" value. Eff. exp = 0.05 / (2 − x). Or type the game value in the Penalty box</small>',
       tree62:'Tree 6.2: weaken <b>1e1000</b><small>enter the tree "/x" value. Eff. exp = 0.033 / (2 − x). Or type the game value in the Penalty box</small>',
       treeVal:"Tree value", treePen:"Penalty",
+      otherPenL:'Other penalty<small>always from atom 1: atom gain ^this (default 1 = no effect). Add manually as needed</small>',
       c4:"Buffs",
       virusL:'Prog. 7 Viral Sublimation<small>done: atom gain ^1.02; not done: ^0.02 (heavy penalty)</small>',
       singCntL:'Singularity-count atom mult<small>always from atom 1: atom gain ^this (default 1 = no effect)</small>',
@@ -374,7 +380,7 @@
       start:"start", plus:" + ", digits:" digits", secLabel:" s", lsNote:" (local speed ×%1 applied)",
       rateLE1:"×≤1",
       tagSingcnt:"Sing.count mult", tagVirus:"Viral Sublim.", tagRelic:"Relic 69",
-      tagT31:"Tree 3.1", tagT32:"Tree 3.2", tagT62:"Tree 6.2",
+      tagT31:"Tree 3.1", tagT32:"Tree 3.2", tagT62:"Tree 6.2", tagOther:"Other",
       singOne:"Singularity 1–10", singPre:"Singularity ", op:" (", cp:")"
     }
   };
@@ -386,6 +392,7 @@
     return [
       {log:0,       e:s.singCnt, kind:"buf", tag:t("tagSingcnt")},
       {log:0,       e:s.virus,   kind:"buf", tag:t("tagVirus")},
+      {log:0,       e:s.otherPen,kind:"pen", tag:t("tagOther")},
       {log:6,       e:s.relic69, kind:"buf", tag:t("tagRelic")},
       {log:10,      e:rn128,     kind:"pen", tag:"RN128"},
       {log:50,      e:s.rn126?1:0.833, kind:"pen", tag:"RN126"},
@@ -453,7 +460,7 @@
       relic69=$("relic69"), singCnt=$("singCnt"), virus=$("virus"),
       rn126=$("rn126"), rn127=$("rn127"), rn128=$("rn128"), rn128chk=$("rn128chk"),
       tree31=$("tree31"), tree32=$("tree32"), tree62=$("tree62"),
-      tree31ov=$("tree31ov"), tree32ov=$("tree32ov"), tree62ov=$("tree62ov"),
+      tree31ov=$("tree31ov"), tree32ov=$("tree32ov"), tree62ov=$("tree62ov"), otherPen=$("otherPen"),
       singSel=$("singSel"), singReq=$("singReq"), tgtAtom=$("tgtAtom"),
       singBox=$("singBox"), atomBox=$("atomBox"), copyBtn=$("copyBtn");
   var mode="sing";
@@ -491,6 +498,7 @@
     var r69=parseFloat(relic69.value); if(!isFinite(r69)||r69<0) r69=1.0;
     var sc=parseFloat(singCnt.value); if(!isFinite(sc)||sc<0) sc=1.0;
     var vir = virus.checked ? 1.02 : 0.02;
+    var op=parseFloat(otherPen.value); if(!isFinite(op)||op<0) op=1.0;
     // 上書き欄が空でなければゲーム表示の実効指数を直接使用。空なら base/(2−x)。
     function treeEff(ovEl, baseDef, xEl){
       var ov=(ovEl.value||"").trim();
@@ -501,7 +509,7 @@
     var t32=treeEff(tree32ov, 0.05,  tree32);
     var t62=treeEff(tree62ov, 0.033, tree62);
     var l128=parseInt(rn128.value,10); if(!isFinite(l128)||l128<0) l128=0; if(l128>10) l128=10;
-    return {relic69:r69, singCnt:sc, virus:vir, rn126:rn126.checked, rn127:rn127.checked, rn128:l128,
+    return {relic69:r69, singCnt:sc, virus:vir, otherPen:op, rn126:rn126.checked, rn127:rn127.checked, rn128:l128,
             tree31:t31, tree32:t32, tree62:t62};
   }
   function targetLog(){
@@ -587,7 +595,7 @@
     });
   });
 
-  var FIELDS=["singMult","curAtom","localSpeed","relic69","singCnt","rn128","tree31","tree32","tree62","tree31ov","tree32ov","tree62ov","tgtAtom","singSel"];
+  var FIELDS=["singMult","curAtom","localSpeed","relic69","singCnt","rn128","tree31","tree32","tree62","tree31ov","tree32ov","tree62ov","otherPen","tgtAtom","singSel"];
   var CHECKS=["virus","localSpeedOn","rn126","rn127","rn128chk"];
   function save(){
     try{
@@ -647,7 +655,7 @@
     else fallback();
   });
 
-  [singMult,curAtom,localSpeed,localSpeedOn,relic69,singCnt,virus,rn126,rn127,rn128,tree31,tree32,tree62,tree31ov,tree32ov,tree62ov,singSel,tgtAtom].forEach(function(el){
+  [singMult,curAtom,localSpeed,localSpeedOn,relic69,singCnt,virus,rn126,rn127,rn128,tree31,tree32,tree62,tree31ov,tree32ov,tree62ov,otherPen,singSel,tgtAtom].forEach(function(el){
     el.addEventListener("input",update); el.addEventListener("change",update);
   });
 
