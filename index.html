@@ -44,6 +44,10 @@
   .seg{display:flex;gap:8px;margin-bottom:12px}
   .seg button{flex:1;background:#0e1124;border:1px solid var(--line);color:var(--sub);padding:9px;border-radius:9px;font-size:.85rem;cursor:pointer;transition:.15s}
   .seg button.on{background:#2a2f57;color:var(--txt);border-color:var(--acc)}
+  .quick{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+  .quick span{font-size:.72rem;color:var(--dim)}
+  .quick button{background:#0e1124;border:1px solid var(--line);color:var(--acc2);border-radius:8px;padding:6px 12px;font-size:.8rem;font-family:var(--mono);cursor:pointer;transition:.15s}
+  .quick button:hover{border-color:var(--acc);color:var(--txt)}
 
   details.adv{margin-top:12px;border-top:1px dashed var(--line);padding-top:12px}
   details.adv summary{cursor:pointer;color:var(--dim);font-size:.8rem;list-style:none}
@@ -141,6 +145,11 @@
     <div class="seg" id="modeSeg">
       <button data-mode="sing" class="on" data-i18n="modeSing">特異点の回数で指定</button>
       <button data-mode="atom" data-i18n="modeAtom">アトム量で指定</button>
+    </div>
+    <div class="quick" id="quickTargets">
+      <span data-i18n="quickLbl">よく使う目標</span>
+      <button data-atom="1.80e308">1.8e308</button>
+      <button data-atom="1e1000">1e1000</button>
     </div>
     <div id="singBox" class="field">
       <label data-i18n="singSelL">目標の特異点回数</label>
@@ -246,6 +255,7 @@
           <th data-i18n="thRate">実効 ×/秒</th>
           <th data-i18n="thDig" data-i18n-title="thDigT">桁幅</th>
           <th data-i18n="thTime">所要時間</th>
+          <th data-i18n="thPerDig" data-i18n-title="thPerDigT">1桁あたり</th>
         </tr></thead>
         <tbody></tbody>
       </table>
@@ -309,6 +319,7 @@
       rateStd:"標準表記", rateExp:"指数表記",
       thRange:"区間 (アトム)", thEff:"効果", thE:"累積指数 E", thRate:"実効 ×/秒", thDig:"桁幅", thTime:"所要時間",
       thEffT:"この区間の開始時に発動する効果(バフ/ペナルティ)", thDigT:"この区間で伸びるアトムの桁幅(log₁₀)",
+      thPerDig:"1桁あたり", thPerDigT:"この区間でアトムを1桁(×10)伸ばすのにかかる時間", quickLbl:"よく使う目標",
       segFoot:"アトム量が閾値を超えるたびに「原子獲得量」が累乗され、実効レートが下がります。軽減設定を有効にすると該当区間のペナルティが緩みます。",
       copyBtn:"設定と結果をコピー", copied:"コピーしました ✓",
       ci:"計算モデルと前提",
@@ -364,6 +375,7 @@
       rateStd:"Standard", rateExp:"Exponent",
       thRange:"Range (atoms)", thEff:"Effect", thE:"Cumul. exp E", thRate:"Eff. ×/sec", thDig:"Digits", thTime:"Time",
       thEffT:"Effect (buff/penalty) that activates at the start of this segment", thDigT:"Atom digit-width grown in this segment (log₁₀)",
+      thPerDig:"per digit", thPerDigT:"Time to grow atoms by 1 digit (×10) in this segment", quickLbl:"Quick targets",
       segFoot:"Each time atoms cross a threshold, atom gain is raised to a power and the effective rate drops. Enabling a mitigation eases that segment's penalty.",
       copyBtn:"Copy settings & result", copied:"Copied ✓",
       ci:"Model & assumptions",
@@ -494,6 +506,17 @@
     });
   });
 
+  // よく使う目標のワンクリック（アトム量モードに切替えて値をセット）
+  document.querySelectorAll("#quickTargets button").forEach(function(b){
+    b.addEventListener("click",function(){
+      mode="atom";
+      document.querySelectorAll("#modeSeg button").forEach(function(x){x.classList.toggle("on",x.dataset.mode==="atom");});
+      singBox.style.display="none"; atomBox.style.display="";
+      tgtAtom.value=b.dataset.atom;
+      update();
+    });
+  });
+
   function settings(){
     var r69=parseFloat(relic69.value); if(!isFinite(r69)||r69<0) r69=1.0;
     var sc=parseFloat(singCnt.value); if(!isFinite(sc)||sc<0) sc=1.0;
@@ -574,7 +597,8 @@
           +'<td>'+Eseg.toPrecision(3)+'</td>'
           +'<td>'+(logAseg>0?fmtRate(logAseg):"—")+'</td>'
           +'<td>'+span.toFixed(1)+'</td>'
-          +'<td>'+fmtTime(td)+'</td></tr>';
+          +'<td>'+fmtTime(td)+'</td>'
+          +'<td>'+((span>0&&isFinite(td))?fmtTime(td/span):"—")+'</td></tr>';
     }
 
     $("timeBig").textContent=fmtTime(total/sf);
