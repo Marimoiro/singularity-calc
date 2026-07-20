@@ -260,6 +260,7 @@
         <tbody></tbody>
       </table>
     </div>
+    <p class="foot" id="initNote" style="margin-top:8px"></p>
     <p class="foot" data-i18n="segFoot"></p>
     <button class="btn" id="copyBtn" data-i18n="copyBtn">設定と結果をコピー</button>
   </div>
@@ -319,7 +320,7 @@
       rateStd:"標準表記", rateExp:"指数表記",
       thRange:"区間 (アトム)", thEff:"効果", thE:"累積指数 E", thRate:"実効 ×/秒", thDig:"桁幅", thTime:"所要時間",
       thEffT:"この区間の開始時に発動する効果(バフ/ペナルティ)", thDigT:"この区間で伸びるアトムの桁幅(log₁₀)",
-      thPerDig:"1桁あたり", thPerDigT:"この区間でアトムを1桁(×10)伸ばすのにかかる時間", quickLbl:"よく使う目標",
+      thPerDig:"1桁あたり", thPerDigT:"この区間でアトムを1桁(×10)伸ばすのにかかる時間", quickLbl:"よく使う目標", initBonus:"初期ボーナス",
       segFoot:"アトム量が閾値を超えるたびに「原子獲得量」が累乗され、実効レートが下がります。軽減設定を有効にすると該当区間のペナルティが緩みます。",
       copyBtn:"設定と結果をコピー", copied:"コピーしました ✓",
       ci:"計算モデルと前提",
@@ -375,7 +376,7 @@
       rateStd:"Standard", rateExp:"Exponent",
       thRange:"Range (atoms)", thEff:"Effect", thE:"Cumul. exp E", thRate:"Eff. ×/sec", thDig:"Digits", thTime:"Time",
       thEffT:"Effect (buff/penalty) that activates at the start of this segment", thDigT:"Atom digit-width grown in this segment (log₁₀)",
-      thPerDig:"per digit", thPerDigT:"Time to grow atoms by 1 digit (×10) in this segment", quickLbl:"Quick targets",
+      thPerDig:"per digit", thPerDigT:"Time to grow atoms by 1 digit (×10) in this segment", quickLbl:"Quick targets", initBonus:"Initial bonus",
       segFoot:"Each time atoms cross a threshold, atom gain is raised to a power and the effective rate drops. Enabling a mitigation eases that segment's penalty.",
       copyBtn:"Copy settings & result", copied:"Copied ✓",
       ci:"Model & assumptions",
@@ -543,7 +544,7 @@
   function clearOut(){
     $("timeBig").textContent="—"; $("timeSub").textContent="";
     $("stTgt").textContent="—"; $("stB").textContent="—"; $("stDelta").textContent="—"; $("stReq").textContent="—";
-    $("segTable").querySelector("tbody").innerHTML="";
+    $("segTable").querySelector("tbody").innerHTML=""; $("initNote").textContent="";
   }
 
   function calc(){
@@ -569,7 +570,7 @@
     if(x1<=x0){ msg("ok",t("reachedMsg"));
       $("timeBig").textContent=t("reached"); $("timeSub").textContent="";
       $("stTgt").textContent="—"; $("stB").textContent=fmtRate(logB); $("stDelta").textContent="0"+t("digits");
-      $("segTable").querySelector("tbody").innerHTML=""; return;
+      $("segTable").querySelector("tbody").innerHTML=""; $("initNote").textContent=""; return;
     }
     msg("","");
 
@@ -577,7 +578,7 @@
     for(var i=0;i<ths.length;i++){ if(ths[i].log>x0+1e-9 && ths[i].log<x1-1e-9) bounds.push(ths[i].log); }
     bounds.push(x1); bounds.sort(function(a,b){return a-b;});
 
-    var total=0, rows="";
+    var total=0, rows="", initDetail="";
     for(var k=0;k<bounds.length-1;k++){
       var lo=bounds[k], hi=bounds[k+1], mid=(lo+hi)/2;
       var Eseg=Eat(mid,ths);
@@ -587,7 +588,10 @@
       total+=tt;
       var td = tt/sf;
       var here=[]; for(var j=0;j<ths.length;j++){ if(Math.abs(ths[j].log-lo)<1e-6) here.push(ths[j]); }
-      var eff = here.map(function(x){ var v=(+x.e.toFixed(4)); return (x.tag?x.tag+" ":"")+"^"+v; }).join(t("plus")) || (k===0?t("start"):"");
+      var effFull = here.map(function(x){ var v=(+x.e.toFixed(4)); return (x.tag?x.tag+" ":"")+"^"+v; }).join(t("plus"));
+      var isInit = here.length>0 && Math.abs(here[0].log)<1e-9;   // アトム1の常時効果（初期ボーナス）
+      var eff = isInit ? t("initBonus") : (effFull || (k===0?t("start"):""));
+      if(isInit) initDetail = effFull;
       var isOff = here.length>0 && here.every(function(x){return x.e===1;});
       var isPen = here.some(function(x){return x.kind==="pen" && x.e!==1;});
       var isBuf = here.some(function(x){return x.kind==="buf" && x.e!==1;});
@@ -607,6 +611,7 @@
     $("stB").textContent=fmtRate(logB);
     $("stDelta").textContent=(x1-x0).toFixed(1)+t("digits");
     $("segTable").querySelector("tbody").innerHTML=rows;
+    $("initNote").textContent = initDetail ? (t("initBonus")+" = "+initDetail) : "";
   }
 
   rn128chk.addEventListener("change",function(){ rn128.value = rn128chk.checked?10:0; update(); });
